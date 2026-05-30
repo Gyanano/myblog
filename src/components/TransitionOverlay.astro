@@ -12,7 +12,7 @@
 
   const COVER_MS = 300;
   const REVEAL_MS = 340;
-  const REVEAL_GAP_MS = 150; // 揭幕消失后到内容入场之间的空拍
+  const SETTLE_MS = 170; // 蒙版盖住后留给内容加载/布局/入场稳定的时间，再揭幕
   const EASE = "cubic-bezier(.6,0,.2,1)";
 
   let busy = false; // 正在过场
@@ -83,16 +83,13 @@
       return;
     }
     pendingReveal = false;
-    // 延后一帧，让本次 page-load 的 GSAP/ScrollTrigger 重建在遮罩下先跑完，
-    // 揭幕动画独占干净帧；揭幕结束后留一个空拍，再播放内容入场，二者彻底分开。
-    requestAnimationFrame(() => {
+    // 此刻新页面已在蒙版下完成切换。BaseLayout 已把视口内内容定为终态、
+    // 重排/ScrollTrigger 重建也在进行——停一拍让它彻底稳定，再揭幕露出成品页面。
+    window.setTimeout(() => {
       animTo("0%", "-100%", REVEAL_MS).then(() => {
         if (t) t.style.transform = "translateY(100%)";
         (window as any).__inkNav = false;
-        window.setTimeout(() => {
-          (window as any).__playReveal?.();
-        }, REVEAL_GAP_MS);
       });
-    });
+    }, SETTLE_MS);
   });
 </script>

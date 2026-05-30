@@ -1,6 +1,6 @@
 ---
-// 昼夜（宣纸/墨夜）切换印章。不使用全屏遮罩——主题只是改 CSS 颜色变量，
-// 切换时临时给一组颜色属性加 0.45s 过渡，颜色就地平滑渐变，最轻最干净。
+// 昼夜（宣纸/墨夜）切换印章。复用水墨蒙版：盖墨 → 在蒙版下做颜色渐变 →
+// 渐变完成后蒙版上滑露出新配色。颜色 morph 的卡顿全藏在蒙版之下。
 ---
 
 <button id="theme-toggle" class="seal-btn" type="button" aria-label="切换昼夜" title="昼夜" data-cursor>
@@ -8,6 +8,11 @@
 </button>
 
 <script>
+  const COVER_MS = 280;
+  const HOLD_MS = 380; // 蒙版下颜色渐变时长（略大于 CSS 过渡 0.35s）
+  const REVEAL_MS = 340;
+  const EASE = "cubic-bezier(.6,0,.2,1)";
+
   function applyTheme(t: string) {
     document.documentElement.setAttribute("data-theme", t);
     try {
@@ -15,21 +20,44 @@
     } catch {}
   }
 
-  let themeTimer = 0;
+  function overlay() {
+    return document.getElementById("ink-transition");
+  }
+  function animT(from: string, to: string, dur: number) {
+    const t = overlay();
+    if (!t) return Promise.resolve();
+    return t.animate(
+      [{ transform: `translateY(${from})` }, { transform: `translateY(${to})` }],
+      { duration: dur, easing: EASE, fill: "forwards" },
+    ).finished;
+  }
+  function wait(ms: number) {
+    return new Promise((r) => window.setTimeout(r, ms));
+  }
+
+  let busy = false;
 
   function initThemeToggle() {
     const btn = document.getElementById("theme-toggle");
     if (!btn || btn.dataset.bound === "1") return;
     btn.dataset.bound = "1";
-    btn.addEventListener("click", (e) => {
+    btn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      const cur = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-      const next = cur === "dark" ? "light" : "dark";
+      if (busy) return;
+      busy = true;
       const root = document.documentElement;
-      root.classList.add("theme-anim");
-      applyTheme(next);
-      window.clearTimeout(themeTimer);
-      themeTimer = window.setTimeout(() => root.classList.remove("theme-anim"), 520);
+      const cur = root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      const next = cur === "dark" ? "light" : "dark";
+      const t = overlay();
+      if (t) t.style.transform = "translateY(100%)";
+      await animT("100%", "0%", COVER_MS); // 盖墨
+      root.classList.add("theme-anim"); // 颜色过渡开启
+      applyTheme(next); // 在蒙版下渐变
+      await wait(HOLD_MS); // 等颜色渐变完成
+      await animT("0%", "-100%", REVEAL_MS); // 揭幕露出新配色
+      if (t) t.style.transform = "translateY(100%)";
+      root.classList.remove("theme-anim");
+      busy = false;
     });
   }
   document.addEventListener("astro:page-load", initThemeToggle);

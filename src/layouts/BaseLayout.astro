@@ -75,47 +75,53 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
         (window as any).__lenis = lenis;
       }
 
-      // 先把入场目标置为隐藏初态（藏在遮罩下，避免揭幕瞬间闪现）
-      function hideRevealTargets() {
-        const titles = gsap.utils.toArray<HTMLElement>(".gs-title");
-        if (titles.length) gsap.set(titles, { opacity: 0, y: 40 });
-        const fades = gsap.utils.toArray<HTMLElement>(".gs-fade-up");
-        if (fades.length) gsap.set(fades, { opacity: 0, y: 50 });
-        gsap.utils.toArray<HTMLElement>(".gs-stagger").forEach((g) => {
-          if (g.children.length) gsap.set(g.children, { opacity: 0, y: 30 });
-        });
+      function isInView(el: HTMLElement) {
+        const r = el.getBoundingClientRect();
+        return r.top < window.innerHeight * 0.9 && r.bottom > 0;
       }
 
-      // 真正播放入场（从隐藏初态淡入）。在揭幕动画跑完后再调用，二者不再抢帧。
-      function playReveal() {
-        gsap.utils.toArray<HTMLElement>(".gs-title").forEach((title) => {
-          gsap.to(title, {
-            scrollTrigger: { trigger: title, start: "top 85%" },
-            y: 0,
-            opacity: 1,
-            duration: 0.9,
-            ease: "power3.out",
-          });
-        });
-        gsap.utils.toArray<HTMLElement>(".gs-stagger").forEach((group) => {
-          const items = group.children;
-          if (items.length) {
-            gsap.to(items, {
-              scrollTrigger: { trigger: group, start: "top 82%" },
-              y: 0,
-              opacity: 1,
+      // 构建入场动画。
+      // settleInView=true（过场导航：此刻蒙版正盖住屏幕）：已在视口内的元素直接定为
+      // 终态、不做动画——加载/布局/重排的卡顿都藏在蒙版下，揭幕后即是稳定页面；
+      // 视口外的元素仍保留随滚动淡入。
+      // settleInView=false（首次加载 / 前进后退，无蒙版）：照常播放入场动画。
+      function buildReveal(settleInView: boolean) {
+        function handle(el: HTMLElement, from: Record<string, number>, dur: number, ease: string) {
+          if (settleInView && isInView(el)) {
+            gsap.set(el, { opacity: 1, y: 0 });
+          } else {
+            gsap.from(el, {
+              ...from,
+              duration: dur,
+              ease,
+              scrollTrigger: { trigger: el, start: "top 85%" },
+            });
+          }
+        }
+        gsap.utils
+          .toArray<HTMLElement>(".gs-title")
+          .forEach((t) => handle(t, { opacity: 0, y: 40 }, 0.9, "power3.out"));
+        gsap.utils
+          .toArray<HTMLElement>(".gs-fade-up")
+          .forEach((t) => handle(t, { opacity: 0, y: 50 }, 1.0, "power3.out"));
+        gsap.utils.toArray<HTMLElement>(".gs-stagger").forEach((g) => {
+          const items = g.children;
+          if (!items.length) return;
+          if (settleInView && isInView(g)) {
+            gsap.set(items, { opacity: 1, y: 0 });
+          } else {
+            gsap.from(items, {
+              opacity: 0,
+              y: 30,
               duration: 0.8,
               stagger: 0.1,
               ease: "power2.out",
+              scrollTrigger: { trigger: g, start: "top 82%" },
             });
           }
         });
-        gsap.utils.toArray<HTMLElement>(".gs-fade-up").forEach((el) => {
-          gsap.to(el, { y: 0, opacity: 1, duration: 1.0, delay: 0.05, ease: "power3.out" });
-        });
         ScrollTrigger.refresh();
       }
-      (window as any).__playReveal = playReveal;
 
       function cleanupReveal() {
         ScrollTrigger.getAll().forEach((t) => t.kill());
@@ -127,10 +133,8 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
           lenis.scrollTo(0, { immediate: true });
           lenis.resize();
         }
-        hideRevealTargets();
-        // 过场导航时，由 TransitionOverlay 在揭幕后再调用 __playReveal；
-        // 首次加载 / 前进后退则立即播放。
-        if (!(window as any).__inkNav) playReveal();
+        // __inkNav 为真表示这是一次过场导航（蒙版正盖住），把工作做在蒙版下
+        buildReveal(!!(window as any).__inkNav);
       }
 
       document.addEventListener("astro:page-load", onPageLoad);
