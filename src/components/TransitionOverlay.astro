@@ -89,6 +89,7 @@
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         window.setTimeout(() => {
+          void document.body.offsetHeight; // 强制刷新布局，避免残留重排撞上揭幕首帧
           animTo("0%", "-100%", REVEAL_MS).then(() => {
             if (t) t.style.transform = "translateY(100%)";
             (window as any).__inkNav = false;

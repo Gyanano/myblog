@@ -75,42 +75,68 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
         (window as any).__lenis = lenis;
       }
 
-      function isInView(el: HTMLElement) {
-        const r = el.getBoundingClientRect();
-        return r.top < window.innerHeight * 0.9 && r.bottom > 0;
+      // 完全在视口下方（揭幕时根本不可见）才允许滚动入场
+      function belowFold(el: HTMLElement) {
+        return el.getBoundingClientRect().top >= window.innerHeight;
       }
 
       // 构建入场动画。
-      // settleInView=true（过场导航：此刻蒙版正盖住屏幕）：已在视口内的元素直接定为
-      // 终态、不做动画——加载/布局/重排的卡顿都藏在蒙版下，揭幕后即是稳定页面；
-      // 视口外的元素仍保留随滚动淡入。
-      // settleInView=false（首次加载 / 前进后退，无蒙版）：照常播放入场动画。
+      // settleInView=true（过场导航：蒙版正盖住屏幕）：先把所有目标无条件定为终态，
+      // 保证揭幕时可见区域 100% 静止；只给完全在视口下方的元素重新绑定滚动入场。
+      // settleInView=false（首次加载 / 前进后退，无蒙版）：照常播放全部入场动画。
       function buildReveal(settleInView: boolean) {
-        function handle(el: HTMLElement, from: Record<string, number>, dur: number, ease: string) {
-          if (settleInView && isInView(el)) {
-            gsap.set(el, { opacity: 1, y: 0 });
-          } else {
-            gsap.from(el, {
-              ...from,
-              duration: dur,
-              ease,
-              scrollTrigger: { trigger: el, start: "top 85%" },
-            });
-          }
+        const titles = gsap.utils.toArray<HTMLElement>(".gs-title");
+        const fades = gsap.utils.toArray<HTMLElement>(".gs-fade-up");
+        const groups = gsap.utils.toArray<HTMLElement>(".gs-stagger");
+
+        if (!settleInView) {
+          titles.forEach((t) =>
+            gsap.from(t, {
+              opacity: 0,
+              y: 40,
+              duration: 0.9,
+              ease: "power3.out",
+              scrollTrigger: { trigger: t, start: "top 85%" },
+            }),
+          );
+          fades.forEach((t) =>
+            gsap.from(t, { opacity: 0, y: 50, duration: 1.0, ease: "power3.out" }),
+          );
+          groups.forEach((g) => {
+            if (g.children.length)
+              gsap.from(g.children, {
+                opacity: 0,
+                y: 30,
+                duration: 0.8,
+                stagger: 0.1,
+                ease: "power2.out",
+                scrollTrigger: { trigger: g, start: "top 82%" },
+              });
+          });
+          ScrollTrigger.refresh();
+          return;
         }
-        gsap.utils
-          .toArray<HTMLElement>(".gs-title")
-          .forEach((t) => handle(t, { opacity: 0, y: 40 }, 0.9, "power3.out"));
-        gsap.utils
-          .toArray<HTMLElement>(".gs-fade-up")
-          .forEach((t) => handle(t, { opacity: 0, y: 50 }, 1.0, "power3.out"));
-        gsap.utils.toArray<HTMLElement>(".gs-stagger").forEach((g) => {
-          const items = g.children;
-          if (!items.length) return;
-          if (settleInView && isInView(g)) {
-            gsap.set(items, { opacity: 1, y: 0 });
-          } else {
-            gsap.from(items, {
+
+        // 过场：先把一切定为终态（视口内/近视口的内容绝不会在揭幕时动）
+        if (titles.length) gsap.set(titles, { opacity: 1, y: 0 });
+        if (fades.length) gsap.set(fades, { opacity: 1, y: 0 });
+        groups.forEach((g) => {
+          if (g.children.length) gsap.set(g.children, { opacity: 1, y: 0 });
+        });
+        // 仅对完全在视口下方的元素重新隐藏 + 绑定滚动入场（揭幕时它们不可见）
+        titles.forEach((t) => {
+          if (belowFold(t))
+            gsap.from(t, {
+              opacity: 0,
+              y: 40,
+              duration: 0.9,
+              ease: "power3.out",
+              scrollTrigger: { trigger: t, start: "top 85%" },
+            });
+        });
+        groups.forEach((g) => {
+          if (g.children.length && belowFold(g))
+            gsap.from(g.children, {
               opacity: 0,
               y: 30,
               duration: 0.8,
@@ -118,7 +144,6 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
               ease: "power2.out",
               scrollTrigger: { trigger: g, start: "top 82%" },
             });
-          }
         });
         ScrollTrigger.refresh();
       }
