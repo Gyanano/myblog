@@ -429,11 +429,6 @@ html.ink-transitioning #webgl-container,
 html.ink-transitioning .scroll-painting-container {
   mix-blend-mode: normal !important;
 }
-/* 过渡期间把内容主体提升为独立 GPU 合成层：揭幕时遮罩滑走只需合成两张已栅格化的
-   纹理，主线程零重绘。过渡结束移除该类即释放该层。 */
-html.ink-transitioning main {
-  will-change: transform;
-}
 
 /* 昼夜切换印章按钮 */
 .seal-btn {
