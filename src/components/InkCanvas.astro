@@ -56,10 +56,13 @@
         uMouse: { value: new THREE.Vector2(-1, -1) },
         uDelta: { value: new THREE.Vector2(0, 0) },
         uIsDown: { value: 0.0 },
+        uSplash: { value: new THREE.Vector2(-1, -1) },
+        uSplashRadius: { value: 0.22 },
+        uSplashStrength: { value: 0.0 },
       },
       vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`,
       fragmentShader: `
-        precision highp float; uniform sampler2D tDiffuse; uniform vec2 uResolution; uniform vec2 uMouse; uniform vec2 uDelta; uniform float uIsDown; varying vec2 vUv;
+        precision highp float; uniform sampler2D tDiffuse; uniform vec2 uResolution; uniform vec2 uMouse; uniform vec2 uDelta; uniform float uIsDown; uniform vec2 uSplash; uniform float uSplashRadius; uniform float uSplashStrength; varying vec2 vUv;
         void main() {
           vec2 texel = 1.0 / uResolution; vec2 uv = vUv;
           float vT = texture2D(tDiffuse, uv + vec2(0.0, texel.y)).g; float vB = texture2D(tDiffuse, uv - vec2(0.0, texel.y)).g;
@@ -73,6 +76,7 @@
           float ink = mix(c.r, blurred.r, 0.4); vec2 newVel = mix(c.gb, blurred.gb, 0.1);
           float aspect = uResolution.x / uResolution.y; vec2 aspectUv = uv * vec2(aspect, 1.0); vec2 aspectMouse = uMouse * vec2(aspect, 1.0); float dist = distance(aspectUv, aspectMouse);
           if (uIsDown > 0.5 && dist < 0.04) { float falloff = smoothstep(0.04, 0.0, dist); ink = max(ink, falloff * 1.0); newVel += uDelta * falloff * 5.0; }
+          if (uSplashStrength > 0.001) { vec2 aspectSplash = uSplash * vec2(aspect, 1.0); float sd = distance(aspectUv, aspectSplash); float f = smoothstep(uSplashRadius, 0.0, sd); ink = max(ink, f * uSplashStrength); newVel += normalize(aspectUv - aspectSplash + vec2(1e-5)) * f * uSplashStrength * 3.0; }
           ink *= 0.995; newVel *= 0.98; gl_FragColor = vec4(ink, newVel.x, newVel.y, 1.0);
         }
       `,
@@ -109,6 +113,8 @@
     let lastActive = 0;
     let running = false;
     let rafId = 0;
+    let forceRunUntil = 0; // 泼墨后强制渲染一段时间，让墨自然消散
+    let splashTimer: ReturnType<typeof setTimeout>;
 
     function now() {
       return performance.now();
@@ -176,7 +182,7 @@
       if (!running) return;
       renderFrame();
       // 空闲超时后停止渲染（墨迹此时已基本消散），节省 GPU
-      if (now() - lastActive > IDLE_MS) {
+      if (now() - lastActive > IDLE_MS && now() > forceRunUntil) {
         running = false;
         return;
       }
@@ -193,6 +199,27 @@
       running = false;
       if (rafId) cancelAnimationFrame(rafId);
     }
+
+    // 对外暴露「泼墨」：向墨场注入一团墨，自然晕开消散。
+    // cx/cy 为客户端坐标，radius 归一化半径，strength 墨量。
+    function inkSplash(cx: number, cy: number, radius = 0.22, strength = 1.0) {
+      simMaterial.uniforms.uSplash.value.set(cx / window.innerWidth, 1.0 - cy / window.innerHeight);
+      simMaterial.uniforms.uSplashRadius.value = radius;
+      simMaterial.uniforms.uSplashStrength.value = strength;
+      lastActive = now();
+      forceRunUntil = now() + 5000;
+      start();
+      clearTimeout(splashTimer);
+      splashTimer = setTimeout(() => {
+        simMaterial.uniforms.uSplashStrength.value = 0.0;
+      }, 110);
+    }
+    (window as any).__inkSplash = inkSplash;
+
+    // 点击泼墨：任意处点击注入墨点（与既有墨迹同源）
+    window.addEventListener("click", (e) => {
+      inkSplash(e.clientX, e.clientY, 0.16, 0.85);
+    });
 
     // 初始播一笔，让画面不空，随后进入空闲暂停
     lastActive = now();

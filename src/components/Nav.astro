@@ -1,14 +1,16 @@
 ---
 import { SITE, NAV } from "../consts";
+import ThemeToggle from "./ThemeToggle.astro";
 ---
 
 <header>
   <a class="logo" href="/" data-cursor>{SITE.author}</a>
-  <nav>
+  <nav style="display:flex;align-items:center">
     <ul>
       {NAV.map((n) => (
         <li><a href={n.href}>{n.label}</a></li>
       ))}
     </ul>
+    <ThemeToggle />
   </nav>
 </header>

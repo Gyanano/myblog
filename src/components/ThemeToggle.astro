@@ -1,0 +1,49 @@
+---
+// 昼夜（宣纸/墨夜）切换印章。切换时以水墨过场盖墨→换主题→揭墨。
+---
+
+<button id="theme-toggle" class="seal-btn" type="button" aria-label="切换昼夜" title="昼夜" data-cursor>
+  <span class="seal-night">夜</span><span class="seal-day">昼</span>
+</button>
+
+<script>
+  function applyTheme(t: string) {
+    document.documentElement.setAttribute("data-theme", t);
+    try {
+      localStorage.setItem("theme", t);
+    } catch {}
+  }
+
+  function initThemeToggle() {
+    const btn = document.getElementById("theme-toggle");
+    if (!btn || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const cur = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      const next = cur === "dark" ? "light" : "dark";
+      const t = document.getElementById("ink-transition");
+      if (!t) {
+        applyTheme(next);
+        return;
+      }
+      t.style.opacity = "1";
+      t.animate([{ clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0 0 0 0)" }], {
+        duration: 300,
+        easing: "cubic-bezier(.6,0,.2,1)",
+        fill: "forwards",
+      }).finished.then(() => {
+        applyTheme(next);
+        const out = t.animate([{ clipPath: "inset(0 0 0 0)" }, { clipPath: "inset(0 0 100% 0)" }], {
+          duration: 360,
+          easing: "cubic-bezier(.6,0,.2,1)",
+          fill: "forwards",
+        });
+        out.finished.then(() => {
+          t.style.opacity = "0";
+        });
+      });
+    });
+  }
+  document.addEventListener("astro:page-load", initThemeToggle);
+</script>

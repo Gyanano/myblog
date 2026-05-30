@@ -1,5 +1,7 @@
 ---
-// 终端输入彩蛋：输入 hello world / 你好世界 触发全屏水墨绽放。支持中文输入法。
+// 终端输入彩蛋：输入 hello world / 你好世界 触发「泼墨」——
+// 向全局 WebGL 墨场注入一连串墨团，在屏幕上四溅晕开后自然消散。
+// 支持中文输入法 composition。
 ---
 
 <div class="terminal-wrapper gs-fade-up">
@@ -18,27 +20,42 @@
   </div>
 </div>
 
-<div id="easter-egg-canvas" aria-hidden="true">
-  <div class="ink-text" id="egg-text">Hello World</div>
-</div>
-
 <script>
   function initTerminal() {
     const codeInput = document.getElementById("code-input") as HTMLInputElement | null;
-    const eggCanvas = document.getElementById("easter-egg-canvas");
-    const eggText = document.getElementById("egg-text");
-    if (!codeInput || !eggCanvas || !eggText) return;
+    if (!codeInput) return;
     if (codeInput.dataset.bound === "1") return;
     codeInput.dataset.bound = "1";
 
-    let eggTimeout: ReturnType<typeof setTimeout>;
     let isComposing = false;
-    const matches = ["hello world", "helloworld", "你好世界"];
+    const matches = ["hello world", "helloworld", "你好世界", "落笔", "泼墨"];
+
+    function splashScene() {
+      const splash = (window as any).__inkSplash as
+        | ((x: number, y: number, r?: number, s?: number) => void)
+        | undefined;
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      if (!splash) return;
+      // 中心一大团，随后几处错落小团，模拟泼墨四溅
+      splash(W * 0.5, H * 0.5, 0.36, 1.0);
+      const pts: [number, number, number][] = [
+        [0.32, 0.42, 0.2],
+        [0.68, 0.46, 0.22],
+        [0.45, 0.66, 0.18],
+        [0.6, 0.3, 0.16],
+        [0.38, 0.28, 0.14],
+      ];
+      pts.forEach((p, i) =>
+        setTimeout(() => splash(W * p[0], H * p[1], p[2], 0.9), 90 * (i + 1)),
+      );
+    }
 
     function checkInput(value: string) {
       const val = value.trim().toLowerCase();
       if (matches.includes(val)) {
-        triggerEasterEgg();
+        codeInput!.blur();
+        splashScene();
         codeInput!.value = "";
       }
     }
@@ -66,23 +83,6 @@
         if (this.value !== "") this.value = "";
       }
     });
-
-    function triggerEasterEgg() {
-      codeInput!.blur();
-      if (eggTimeout) clearTimeout(eggTimeout);
-      eggCanvas!.style.opacity = "1";
-      eggText!.classList.remove("trigger");
-      document.body.style.transition = "background-color 2s";
-      document.body.style.backgroundColor = "#FFFFFF";
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => eggText!.classList.add("trigger"));
-      });
-      eggTimeout = setTimeout(() => {
-        eggCanvas!.style.opacity = "0";
-        document.body.style.backgroundColor = "var(--paper-bg)";
-        setTimeout(() => eggText!.classList.remove("trigger"), 1000);
-      }, 5500);
-    }
   }
 
   document.addEventListener("astro:page-load", initTerminal);
