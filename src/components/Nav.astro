@@ -4,13 +4,15 @@ import ThemeToggle from "./ThemeToggle.astro";
 ---
 
 <header>
-  <a class="logo" href="/" data-cursor>{SITE.author}</a>
-  <nav style="display:flex;align-items:center">
-    <ul>
-      {NAV.map((n) => (
-        <li><a href={n.href}>{n.label}</a></li>
-      ))}
-    </ul>
-    <ThemeToggle />
-  </nav>
+  <div class="nav-left">
+    <a class="logo" href="/" data-cursor>{SITE.author}</a>
+    <nav>
+      <ul>
+        {NAV.map((n) => (
+          <li><a href={n.href}>{n.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+  <ThemeToggle />
 </header>

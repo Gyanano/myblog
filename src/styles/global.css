@@ -137,6 +137,12 @@ header {
   background: linear-gradient(to bottom, var(--paper-bg) 0%, transparent 100%);
 }
 
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 3.4rem;
+}
+
 .logo {
   display: flex;
   align-items: center;
@@ -151,7 +157,7 @@ header {
 nav ul {
   list-style: none;
   display: flex;
-  gap: 3rem;
+  gap: 3.8rem;
 }
 
 nav a {
@@ -386,6 +392,14 @@ p {
   #ink-cursor {
     display: none;
   }
+}
+
+/* 关掉 Astro 默认的整页快照交叉淡入：水墨遮罩切换时已盖满屏幕，
+   这层默认动画是多余的开销。换页在遮罩底下瞬间完成。 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 /* 水墨过场遮罩（始终为墨色，不随主题反转）。
@@ -629,10 +643,19 @@ p {
 /* 响应式 */
 @media (max-width: 768px) {
   header {
-    padding: 1.5rem;
+    padding: 1.2rem 1.3rem;
+  }
+  .nav-left {
+    gap: 1.4rem;
+  }
+  .logo {
+    font-size: 1.4rem;
   }
   nav ul {
-    gap: 1.5rem;
+    gap: 1.4rem;
+  }
+  nav a {
+    font-size: 1.2rem;
   }
   .terminal-wrapper {
     width: 95%;
