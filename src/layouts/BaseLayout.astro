@@ -75,37 +75,47 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
         (window as any).__lenis = lenis;
       }
 
-      function runReveal() {
-        // 标题入场
+      // 先把入场目标置为隐藏初态（藏在遮罩下，避免揭幕瞬间闪现）
+      function hideRevealTargets() {
+        const titles = gsap.utils.toArray<HTMLElement>(".gs-title");
+        if (titles.length) gsap.set(titles, { opacity: 0, y: 40 });
+        const fades = gsap.utils.toArray<HTMLElement>(".gs-fade-up");
+        if (fades.length) gsap.set(fades, { opacity: 0, y: 50 });
+        gsap.utils.toArray<HTMLElement>(".gs-stagger").forEach((g) => {
+          if (g.children.length) gsap.set(g.children, { opacity: 0, y: 30 });
+        });
+      }
+
+      // 真正播放入场（从隐藏初态淡入）。在揭幕动画跑完后再调用，二者不再抢帧。
+      function playReveal() {
         gsap.utils.toArray<HTMLElement>(".gs-title").forEach((title) => {
-          gsap.from(title, {
+          gsap.to(title, {
             scrollTrigger: { trigger: title, start: "top 85%" },
-            y: 40,
-            opacity: 0,
-            duration: 1.2,
+            y: 0,
+            opacity: 1,
+            duration: 0.9,
             ease: "power3.out",
           });
         });
-        // 错落入场
         gsap.utils.toArray<HTMLElement>(".gs-stagger").forEach((group) => {
           const items = group.children;
           if (items.length) {
-            gsap.from(items, {
-              scrollTrigger: { trigger: group, start: "top 80%" },
-              y: 30,
-              opacity: 0,
-              duration: 1,
-              stagger: 0.15,
+            gsap.to(items, {
+              scrollTrigger: { trigger: group, start: "top 82%" },
+              y: 0,
+              opacity: 1,
+              duration: 0.8,
+              stagger: 0.1,
               ease: "power2.out",
             });
           }
         });
-        // 首屏淡入元素
         gsap.utils.toArray<HTMLElement>(".gs-fade-up").forEach((el) => {
-          gsap.from(el, { y: 50, opacity: 0, duration: 1.5, delay: 0.3, ease: "power3.out" });
+          gsap.to(el, { y: 0, opacity: 1, duration: 1.0, delay: 0.05, ease: "power3.out" });
         });
         ScrollTrigger.refresh();
       }
+      (window as any).__playReveal = playReveal;
 
       function cleanupReveal() {
         ScrollTrigger.getAll().forEach((t) => t.kill());
@@ -117,7 +127,10 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
           lenis.scrollTo(0, { immediate: true });
           lenis.resize();
         }
-        runReveal();
+        hideRevealTargets();
+        // 过场导航时，由 TransitionOverlay 在揭幕后再调用 __playReveal；
+        // 首次加载 / 前进后退则立即播放。
+        if (!(window as any).__inkNav) playReveal();
       }
 
       document.addEventListener("astro:page-load", onPageLoad);

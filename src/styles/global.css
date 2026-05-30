@@ -27,11 +27,7 @@
   --cinnabar: #d2554e;
 }
 
-/* 颜色切换的柔和过渡 */
-body,
-header {
-  transition: background-color 0.5s ease, color 0.5s ease;
-}
+/* 主题切换在水墨遮罩盖住时瞬间完成（不做颜色 morph），揭幕即最终配色，干脆利落 */
 
 /* 夜间：墨场与长卷改用 screen 混合，浅墨显于暗底 */
 :root[data-theme="dark"] #webgl-container {

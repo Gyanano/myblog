@@ -61,6 +61,7 @@
       e.stopPropagation();
       if (busy) return;
       busy = true;
+      (window as any).__inkNav = true; // 通知 BaseLayout：入场动画等揭幕后再播
       const t = el();
       if (t) t.style.transform = "translateY(100%)";
       animTo("100%", "0%", COVER_MS).then(() => {
@@ -81,10 +82,13 @@
       return;
     }
     pendingReveal = false;
-    // 延后一帧，让本次 page-load 的 GSAP/ScrollTrigger 重建在遮罩下先跑完
+    // 延后一帧，让本次 page-load 的 GSAP/ScrollTrigger 重建在遮罩下先跑完，
+    // 揭幕动画独占干净帧；揭幕结束后再播放内容入场，二者不再抢帧。
     requestAnimationFrame(() => {
       animTo("0%", "-100%", REVEAL_MS).then(() => {
         if (t) t.style.transform = "translateY(100%)";
+        (window as any).__inkNav = false;
+        (window as any).__playReveal?.();
       });
     });
   });
