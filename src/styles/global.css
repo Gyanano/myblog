@@ -62,8 +62,22 @@ header {
   }
 }
 
-html {
-  scroll-behavior: smooth;
+/* Lenis 平滑滚动推荐样式（由 JS 加上 .lenis 类时生效） */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
 }
 
 body {
@@ -580,6 +594,36 @@ p {
   border-radius: 50%;
   background: var(--cinnabar);
   box-shadow: 0 0 6px rgba(190, 58, 58, 0.4);
+}
+
+/* 首页向下展卷提示 */
+.scroll-cue {
+  margin-top: 6vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--ink-light);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.3em;
+}
+.scroll-cue .stroke {
+  width: 1px;
+  height: 46px;
+  background: linear-gradient(180deg, var(--ink-light), transparent);
+  animation: cue-bob 2.4s ease-in-out infinite;
+}
+@keyframes cue-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translateY(8px);
+    opacity: 1;
+  }
 }
 
 /* 响应式 */

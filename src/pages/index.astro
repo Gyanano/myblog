@@ -1,28 +1,85 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import TerminalInput from "../components/TerminalInput.astro";
+import PostCard from "../components/PostCard.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import { getCollection } from "astro:content";
+import { PROJECTS } from "../consts";
+
+const latest = (await getCollection("blog", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+const featured = PROJECTS.slice(0, 2);
 ---
 
 <BaseLayout>
-  <section id="hero" style="padding-top:4vh">
+  <section id="hero" style="padding-top:4vh;text-align:center">
     <TerminalInput />
-    <h1
-      class="gs-fade-up"
-      style="text-align:center;font-size:5rem;margin-top:2vh;color:var(--ink-dark)"
-    >
-      Gyanano
-    </h1>
-    <p
-      class="gs-fade-up"
-      style="text-align:center;font-size:1.2rem;color:var(--ink-light);margin-top:0.5rem"
-    >
+    <h1 class="gs-fade-up" style="font-size:5rem;margin-top:2vh;color:var(--ink-dark)">Gyanano</h1>
+    <p class="gs-fade-up" style="font-size:1.25rem;color:var(--ink-light);margin-top:0.5rem;text-align:center">
       在硅与浏览器之间，落笔生万物
     </p>
     <p
       class="gs-fade-up"
-      style="text-align:center;font-family:var(--font-mono);font-size:0.95rem;color:var(--ink-light);margin-top:1.5rem"
+      style="font-family:var(--font-mono);font-size:0.95rem;color:var(--ink-light);margin-top:1.5rem;text-align:center;letter-spacing:0.15em"
     >
       嵌入式 · 全栈 · INTP
+    </p>
+    <div class="scroll-cue gs-fade-up" aria-hidden="true">
+      <span>向下展卷</span>
+      <span class="stroke"></span>
+    </div>
+  </section>
+
+  <!-- 理念引语 -->
+  <section id="manifesto" style="text-align:center">
+    <p
+      class="gs-title"
+      style="font-size:2rem;line-height:1.9;color:var(--ink-dark);text-align:center;border:none"
+    >
+      在 0 与 1 的绝对理性中，<br />寻找留白与呼吸。
+    </p>
+    <p class="gs-stagger" style="color:var(--ink-light);text-align:center;max-width:600px;margin:1.5rem auto 0">
+      从裸机寄存器到浏览器像素，我把每一个系统都当作一幅徐徐展开的卷轴——
+      克制、连贯，让内容自然流露。
+    </p>
+  </section>
+
+  <!-- 近期墨痕 -->
+  <section id="home-blog">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1rem">
+      <h2 class="gs-title" style="margin-bottom:1rem">近期 · 墨痕</h2>
+      <a href="/blog" data-cursor style="color:var(--cinnabar);text-decoration:none;font-family:var(--font-mono);font-size:0.95rem;white-space:nowrap">全部文章 →</a>
+    </div>
+    <div class="gs-stagger">
+      {latest.map((p) => (
+        <PostCard
+          href={`/blog/${p.id}`}
+          title={p.data.title}
+          date={p.data.date}
+          description={p.data.description}
+          tags={p.data.tags}
+        />
+      ))}
+    </div>
+  </section>
+
+  <!-- 精选 · 术 -->
+  <section id="home-work">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1rem">
+      <h2 class="gs-title" style="margin-bottom:1rem">精选 · 术</h2>
+      <a href="/work" data-cursor style="color:var(--cinnabar);text-decoration:none;font-family:var(--font-mono);font-size:0.95rem;white-space:nowrap">更多项目 →</a>
+    </div>
+    <ul class="works-list gs-stagger" style="list-style:none">
+      {featured.map((p) => <ProjectCard project={p} />)}
+    </ul>
+  </section>
+
+  <!-- 落款格言 -->
+  <section id="home-seal" style="text-align:center">
+    <p style="font-size:1.8rem;color:var(--ink-dark);text-align:center">大音希声，大象无形</p>
+    <p style="color:var(--ink-light);text-align:center;margin-top:0.8rem">
+      设计的最高境界，是隐藏设计本身的痕迹。
     </p>
   </section>
 </BaseLayout>

@@ -1,6 +1,6 @@
 ---
-// 底部水墨山水长卷（《富春山居图》局部）。随页面滚动横向平移，
-// 用 rAF 阻尼跟随（缓动），让山体平移带有惯性/阻尼感，不生硬。跨页保留。
+// 底部水墨山水长卷（《富春山居图》局部）。直接跟随（已被 Lenis 平滑过的）
+// 滚动位置做横向平移——与页面内容共用同一条缓动曲线，阻尼一致、运动同步。跨页保留。
 ---
 
 <div class="scroll-painting-container" aria-hidden="true" transition:persist="landscape">
@@ -14,57 +14,30 @@
     const painting = document.getElementById("scroll-painting") as HTMLImageElement | null;
     if (!painting) return;
 
-    let target = 0;
-    let current = 0;
-    let running = false;
-    let raf = 0;
-
-    const computeTarget = () => {
+    let maxX = 0;
+    const measure = () => {
+      maxX = Math.max(0, painting.scrollWidth - window.innerWidth);
+    };
+    const apply = () => {
       const h = document.documentElement.scrollHeight - window.innerHeight;
       const p = h > 0 ? Math.min(1, Math.max(0, window.scrollY / h)) : 0;
-      const maxX = Math.max(0, painting.scrollWidth - window.innerWidth);
-      target = -p * maxX;
+      // 直接按（平滑后的）滚动进度定位，阻尼来自全局平滑滚动，二者同步
+      painting.style.transform = `translate3d(${-p * maxX}px,0,0)`;
     };
 
-    const tick = () => {
-      // 阻尼缓动：每帧朝目标靠近一定比例，产生惯性拖尾
-      current += (target - current) * 0.085;
-      if (Math.abs(target - current) < 0.4) {
-        current = target;
-        running = false;
-      }
-      painting.style.transform = `translate3d(${current}px,0,0)`;
-      if (running) raf = requestAnimationFrame(tick);
-    };
-
-    const start = () => {
-      if (running) return;
-      running = true;
-      raf = requestAnimationFrame(tick);
-    };
-
-    window.addEventListener(
-      "scroll",
-      () => {
-        computeTarget();
-        start();
-      },
-      { passive: true },
-    );
+    window.addEventListener("scroll", apply, { passive: true });
     window.addEventListener("resize", () => {
-      computeTarget();
-      start();
+      measure();
+      apply();
     });
-    // 换页后（滚动位置归零）重新对齐
     document.addEventListener("astro:page-load", () => {
-      computeTarget();
-      start();
+      measure();
+      apply();
     });
 
     const onReady = () => {
-      computeTarget();
-      current = target;
-      painting.style.transform = `translate3d(${current}px,0,0)`;
+      measure();
+      apply();
     };
     if (painting.complete && painting.naturalWidth) onReady();
     else painting.addEventListener("load", onReady, { once: true });

@@ -60,7 +60,20 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
     <script>
       import gsap from "gsap";
       import { ScrollTrigger } from "gsap/ScrollTrigger";
+      import Lenis from "lenis";
       gsap.registerPlugin(ScrollTrigger);
+
+      // 平滑滚动（阻尼）。画卷直接跟随平滑后的 scrollY，二者共用同一缓动 → 同步一致。
+      let lenis: any = null;
+      function initLenis() {
+        if (lenis) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        lenis = new Lenis({ lerp: 0.09, smoothWheel: true });
+        lenis.on("scroll", ScrollTrigger.update);
+        gsap.ticker.add((time: number) => lenis.raf(time * 1000));
+        gsap.ticker.lagSmoothing(0);
+        (window as any).__lenis = lenis;
+      }
 
       function runReveal() {
         // 标题入场
@@ -98,7 +111,16 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
         ScrollTrigger.getAll().forEach((t) => t.kill());
       }
 
-      document.addEventListener("astro:page-load", runReveal);
+      function onPageLoad() {
+        initLenis();
+        if (lenis) {
+          lenis.scrollTo(0, { immediate: true });
+          lenis.resize();
+        }
+        runReveal();
+      }
+
+      document.addEventListener("astro:page-load", onPageLoad);
       document.addEventListener("astro:before-swap", cleanupReveal);
     </script>
   </body>
