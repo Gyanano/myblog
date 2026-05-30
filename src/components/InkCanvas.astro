@@ -115,6 +115,7 @@
     let rafId = 0;
     let forceRunUntil = 0; // 泼墨后强制渲染一段时间，让墨自然消散
     let splashTimer: ReturnType<typeof setTimeout>;
+    let paused = false; // 页面/主题过渡期间暂停，把资源让给揭幕动画
 
     function now() {
       return performance.now();
@@ -190,7 +191,7 @@
     }
 
     function start() {
-      if (running) return;
+      if (paused || running) return;
       running = true;
       rafId = requestAnimationFrame(loop);
     }
@@ -215,6 +216,15 @@
       }, 110);
     }
     (window as any).__inkSplash = inkSplash;
+
+    // 过渡期间暂停/恢复（由页面切换、主题切换调用）
+    (window as any).__inkPause = () => {
+      paused = true;
+      stop();
+    };
+    (window as any).__inkResume = () => {
+      paused = false;
+    };
 
     // 点击泼墨：任意处点击注入一小团墨（收敛、克制）
     window.addEventListener("click", (e) => {

@@ -12,7 +12,7 @@
 
   const COVER_MS = 300;
   const REVEAL_MS = 340;
-  const SETTLE_MS = 170; // 蒙版盖住后留给内容加载/布局/入场稳定的时间，再揭幕
+  const SETTLE_MS = 120; // 双 rAF 预绘制后再稳定一小段，然后揭幕
   const EASE = "cubic-bezier(.6,0,.2,1)";
 
   let busy = false; // 正在过场
@@ -63,6 +63,7 @@
       if (busy) return;
       busy = true;
       (window as any).__inkNav = true; // 通知 BaseLayout：入场动画等揭幕后再播
+      (window as any).__inkPause?.(); // 过渡期间暂停墨场，腾出资源
       const t = el();
       if (t) t.style.transform = "translateY(100%)";
       animTo("100%", "0%", COVER_MS).then(() => {
@@ -83,13 +84,18 @@
       return;
     }
     pendingReveal = false;
-    // 此刻新页面已在蒙版下完成切换。BaseLayout 已把视口内内容定为终态、
-    // 重排/ScrollTrigger 重建也在进行——停一拍让它彻底稳定，再揭幕露出成品页面。
-    window.setTimeout(() => {
-      animTo("0%", "-100%", REVEAL_MS).then(() => {
-        if (t) t.style.transform = "translateY(100%)";
-        (window as any).__inkNav = false;
+    // 双 rAF 先逼浏览器把新页面绘制出一帧（含布局/栅格化），再短暂稳定，最后揭幕。
+    // 这样新内容的首帧绘制不会与揭幕动画撞在一起，揭幕全程只剩合成层位移。
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.setTimeout(() => {
+          animTo("0%", "-100%", REVEAL_MS).then(() => {
+            if (t) t.style.transform = "translateY(100%)";
+            (window as any).__inkNav = false;
+            (window as any).__inkResume?.();
+          });
+        }, SETTLE_MS);
       });
-    }, SETTLE_MS);
+    });
   });
 </script>

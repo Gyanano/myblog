@@ -48,6 +48,7 @@
       const root = document.documentElement;
       const cur = root.getAttribute("data-theme") === "dark" ? "dark" : "light";
       const next = cur === "dark" ? "light" : "dark";
+      (window as any).__inkPause?.(); // 过渡期间暂停墨场
       const t = overlay();
       if (t) t.style.transform = "translateY(100%)";
       await animT("100%", "0%", COVER_MS); // 盖墨
@@ -57,6 +58,7 @@
       await animT("0%", "-100%", REVEAL_MS); // 揭幕露出新配色
       if (t) t.style.transform = "translateY(100%)";
       root.classList.remove("theme-anim");
+      (window as any).__inkResume?.();
       busy = false;
     });
   }
