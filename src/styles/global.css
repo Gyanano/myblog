@@ -13,7 +13,8 @@
 
   --font-serif: "Noto Serif SC", serif;
   --font-mono: "Fira Code", monospace;
-  --font-calligraphy: "Zhi Mang Xing", cursive;
+  /* 书法体已移除：标题统一使用思源宋体（保证可读性），靠字重与字距维持气质 */
+  --font-calligraphy: "Noto Serif SC", serif;
 }
 
 * {
@@ -40,7 +41,8 @@ body {
   color: var(--ink-dark);
   font-family: var(--font-serif);
   overflow-x: hidden;
-  line-height: 1.8;
+  line-height: 1.85;
+  font-size: 1.18rem;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
@@ -93,8 +95,8 @@ header {
   display: flex;
   align-items: center;
   font-family: var(--font-serif);
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.75rem;
+  font-weight: 700;
   color: var(--ink-dark);
   letter-spacing: 0.1em;
   text-decoration: none;
@@ -112,7 +114,8 @@ nav a {
   position: relative;
   padding-bottom: 4px;
   transition: color 0.3s;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
+  font-weight: 500;
 }
 nav a::after {
   content: "";
@@ -251,24 +254,25 @@ article {
 
 /* 文本排版 */
 h1 {
-  font-family: var(--font-calligraphy);
-  font-weight: 400;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 h2 {
-  font-family: var(--font-calligraphy);
-  font-size: 3.5rem;
-  font-weight: 400;
-  margin-bottom: 2.5rem;
+  font-family: var(--font-serif);
+  font-size: 3.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 2.8rem;
   color: var(--ink-dark);
-  text-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
 }
 
 p {
   color: var(--ink-base);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.6rem;
   text-align: justify;
-  font-size: 1.1rem;
+  font-size: 1.18rem;
 }
 
 /* 实践 / 列表区块 */
@@ -287,31 +291,32 @@ p {
   font-weight: 600;
 }
 
-/* 水平滚动的中国水墨山水长卷 */
+/* 水平滚动的中国水墨山水长卷（《富春山居图》局部，公共领域） */
 .scroll-painting-container {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 60vh;
+  height: 46vh;
   pointer-events: none;
   z-index: 1;
   overflow: hidden;
-  mask-image: linear-gradient(to top, black 20%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to top, black 20%, transparent 100%);
-  opacity: 0.22;
+  mask-image: linear-gradient(to top, black 30%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, black 30%, transparent 100%);
+  opacity: 0.3;
+  mix-blend-mode: multiply;
 }
 
 .scroll-painting {
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 300vw;
   height: 100%;
-  background-image: url("/landscape.svg");
-  background-size: cover;
-  background-position: left bottom;
-  background-repeat: no-repeat;
+  width: auto;
+  max-width: none;
+  display: block;
+  /* 统一成纯水墨调，融入宣纸 */
+  filter: grayscale(1) contrast(1.06) brightness(1.04);
   will-change: transform;
   transform: translateX(0);
 }
@@ -438,7 +443,8 @@ p {
 
 /* 文章正文排版 */
 .prose {
-  font-size: 1.1rem;
+  font-size: 1.22rem;
+  line-height: 1.95;
   color: var(--ink-base);
 }
 .prose :is(h2, h3) {

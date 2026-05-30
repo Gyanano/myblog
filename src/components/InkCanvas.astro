@@ -17,6 +17,8 @@
     if ((window as any).__inkInit) return;
     const container = document.getElementById("webgl-container");
     if (!container) return;
+    // 尊重「减弱动态效果」偏好：直接降级为纯宣纸底
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     // WebGL 能力检测，失败则优雅降级为纯宣纸底
     try {
       const test = document.createElement("canvas");
@@ -27,7 +29,8 @@
     (window as any).__inkInit = true;
 
     const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // 背景墨迹无需高 DPI，固定 1 倍像素以降低 GPU 负载
+    renderer.setPixelRatio(1);
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
@@ -97,7 +100,24 @@
       targetDelta = new THREE.Vector2(0, 0),
       moveTimer: ReturnType<typeof setTimeout>;
 
+    // 仅当鼠标真正移动时才产生墨迹：记录上一次客户端坐标，
+    // 滚动页面时浏览器可能派发坐标不变的 mousemove，需忽略。
+    let lastClientX = -1,
+      lastClientY = -1;
+    // 空闲自动暂停渲染循环，恢复时由鼠标移动唤醒。
+    const IDLE_MS = 2600;
+    let lastActive = 0;
+    let running = false;
+    let rafId = 0;
+
+    function now() {
+      return performance.now();
+    }
+
     function handleMove(clientX: number, clientY: number) {
+      if (clientX === lastClientX && clientY === lastClientY) return; // 滚动等非移动事件
+      lastClientX = clientX;
+      lastClientY = clientY;
       let x = clientX / window.innerWidth,
         y = 1.0 - clientY / window.innerHeight;
       targetDelta.x = (x - mouse.x) * 15.0;
@@ -111,6 +131,8 @@
       moveTimer = setTimeout(() => {
         simMaterial.uniforms.uIsDown.value = 0.0;
       }, 50);
+      lastActive = now();
+      start();
     }
 
     window.addEventListener("mousemove", (e) => handleMove(e.clientX, e.clientY));
@@ -127,8 +149,16 @@
       simMaterial.uniforms.uResolution.value.set(resX, resY);
     });
 
-    function render() {
-      requestAnimationFrame(render);
+    // 标签页不可见时暂停，回到前台再唤醒
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stop();
+      else {
+        lastActive = now();
+        start();
+      }
+    });
+
+    function renderFrame() {
       quad.material = simMaterial;
       simMaterial.uniforms.tDiffuse.value = rtA.texture;
       renderer.setRenderTarget(rtB);
@@ -141,8 +171,32 @@
       rtA = rtB;
       rtB = temp;
     }
-    render();
-    // 初始播一笔，让画面不空
+
+    function loop() {
+      if (!running) return;
+      renderFrame();
+      // 空闲超时后停止渲染（墨迹此时已基本消散），节省 GPU
+      if (now() - lastActive > IDLE_MS) {
+        running = false;
+        return;
+      }
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function start() {
+      if (running) return;
+      running = true;
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function stop() {
+      running = false;
+      if (rafId) cancelAnimationFrame(rafId);
+    }
+
+    // 初始播一笔，让画面不空，随后进入空闲暂停
+    lastActive = now();
+    start();
     setTimeout(() => {
       handleMove(window.innerWidth / 2, window.innerHeight / 2);
       setTimeout(() => handleMove(window.innerWidth / 2 + 20, window.innerHeight / 2 + 20), 50);

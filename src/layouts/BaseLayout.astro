@@ -6,6 +6,7 @@ import InkCanvas from "../components/InkCanvas.astro";
 import Cursor from "../components/Cursor.astro";
 import Nav from "../components/Nav.astro";
 import Watermark from "../components/Watermark.astro";
+import ScrollLandscape from "../components/ScrollLandscape.astro";
 import Footer from "../components/Footer.astro";
 import TransitionOverlay from "../components/TransitionOverlay.astro";
 
@@ -27,7 +28,7 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400&family=Noto+Serif+SC:wght@300;400;600&family=Zhi+Mang+Xing&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400&family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <title>{fullTitle}</title>
@@ -63,6 +64,7 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
     <InkCanvas />
     <Cursor />
     <Watermark />
+    <ScrollLandscape />
     <Nav />
     <main transition:animate="fade">
       <slot />
