@@ -1,0 +1,27 @@
+---
+// 背景散落的语言/技术图标，墨色 + 低透明度、不规则摆放，丰富首屏上半部分。
+// 用 mask-image 上墨色（随昼夜自动变色）。中间竖向区域留空给标题/终端。
+const ICONS: { icon: string; top: string; left: string; size: number; rot: number; op: number }[] = [
+  { icon: "python", top: "13%", left: "7%", size: 66, rot: -8, op: 0.13 },
+  { icon: "linux", top: "9%", left: "27%", size: 46, rot: 13, op: 0.09 },
+  { icon: "react", top: "8%", left: "63%", size: 52, rot: 12, op: 0.1 },
+  { icon: "cplusplus", top: "19%", left: "84%", size: 60, rot: 10, op: 0.12 },
+  { icon: "go", top: "42%", left: "4%", size: 72, rot: -5, op: 0.1 },
+  { icon: "espressif", top: "49%", left: "72%", size: 52, rot: -12, op: 0.1 },
+  { icon: "nodedotjs", top: "38%", left: "91%", size: 54, rot: 8, op: 0.1 },
+  { icon: "typescript", top: "60%", left: "12%", size: 48, rot: 6, op: 0.11 },
+  { icon: "docker", top: "73%", left: "32%", size: 62, rot: -6, op: 0.08 },
+  { icon: "javascript", top: "64%", left: "85%", size: 50, rot: -10, op: 0.1 },
+  { icon: "stmicroelectronics", top: "80%", left: "9%", size: 56, rot: 5, op: 0.09 },
+  { icon: "git", top: "84%", left: "61%", size: 40, rot: -4, op: 0.08 },
+];
+---
+
+<div class="lang-icons" aria-hidden="true">
+  {ICONS.map((i) => (
+    <span
+      class="lang-icon"
+      style={`top:${i.top};left:${i.left};width:${i.size}px;height:${i.size}px;transform:rotate(${i.rot}deg);opacity:${i.op};-webkit-mask-image:url(/icons/${i.icon}.svg);mask-image:url(/icons/${i.icon}.svg)`}
+    ></span>
+  ))}
+</div>
