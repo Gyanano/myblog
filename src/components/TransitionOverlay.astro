@@ -1,45 +1,91 @@
 ---
-// 水墨晕染过场遮罩：路由切换时由下向上滑入盖满，换页后继续上滑揭开。
-// 仅用 transform: translateY（合成层），开销低、动画快。
+// 水墨过场遮罩。自己接管内部链接导航时序：
+// 点击 → 墨盖满屏幕 → navigate() 在遮罩底下完成切换 → 落地后揭墨。
+// 这样「盖墨」一定先于「切换」，两段动画不再打架；GSAP 重建也藏在遮罩下。
+// 仅用 transform: translateY（合成层），开销低。
 ---
 
 <div id="ink-transition" aria-hidden="true" transition:persist="ink-transition"></div>
 
 <script>
-  const DURATION_IN = 360;
-  const DURATION_OUT = 380;
+  import { navigate } from "astro:transitions/client";
+
+  const COVER_MS = 300;
+  const REVEAL_MS = 340;
   const EASE = "cubic-bezier(.6,0,.2,1)";
+
+  let busy = false; // 正在过场
+  let pendingReveal = false; // 落地后需要揭墨
 
   function el() {
     return document.getElementById("ink-transition");
   }
 
-  // 由下方滑入，盖满屏幕
-  function coverIn() {
+  function animTo(from: string, to: string, dur: number) {
     const t = el();
-    if (!t) return;
-    t.animate([{ transform: "translateY(100%)" }, { transform: "translateY(0%)" }], {
-      duration: DURATION_IN,
-      easing: EASE,
-      fill: "forwards",
-    });
+    if (!t) return Promise.resolve();
+    return t.animate(
+      [{ transform: `translateY(${from})` }, { transform: `translateY(${to})` }],
+      { duration: dur, easing: EASE, fill: "forwards" },
+    ).finished;
   }
 
-  // 继续向上滑出，揭开新页；结束后复位到屏幕下方待命
-  function revealOut() {
+  function isInternalNav(a: HTMLAnchorElement): string | null {
+    const href = a.getAttribute("href");
+    if (!href) return null;
+    if (a.target === "_blank" || a.hasAttribute("download")) return null;
+    if (a.dataset.noTransition !== undefined) return null;
+    let url: URL;
+    try {
+      url = new URL(a.href, location.href);
+    } catch {
+      return null;
+    }
+    if (url.origin !== location.origin) return null; // 外链 / mailto 等
+    if (url.pathname === location.pathname && url.search === location.search) return null; // 同页/锚点
+    return url.href;
+  }
+
+  // 捕获阶段拦截，先于 ClientRouter 的点击处理
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (e.defaultPrevented) return;
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const target = e.target as HTMLElement;
+      const a = target.closest("a") as HTMLAnchorElement | null;
+      if (!a) return;
+      const dest = isInternalNav(a);
+      if (!dest) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (busy) return;
+      busy = true;
+      const t = el();
+      if (t) t.style.transform = "translateY(100%)";
+      animTo("100%", "0%", COVER_MS).then(() => {
+        pendingReveal = true;
+        navigate(dest);
+      });
+    },
+    { capture: true },
+  );
+
+  document.addEventListener("astro:page-load", () => {
+    busy = false;
     const t = el();
     if (!t) return;
-    const anim = t.animate([{ transform: "translateY(0%)" }, { transform: "translateY(-100%)" }], {
-      duration: DURATION_OUT,
-      easing: EASE,
-      fill: "forwards",
-    });
-    const reset = () => {
+    if (!pendingReveal) {
+      // 首次加载 / 前进后退：不揭墨，保持停在屏外
       t.style.transform = "translateY(100%)";
-    };
-    anim.finished.then(reset).catch(reset);
-  }
-
-  document.addEventListener("astro:before-swap", coverIn);
-  document.addEventListener("astro:after-swap", revealOut);
+      return;
+    }
+    pendingReveal = false;
+    // 延后一帧，让本次 page-load 的 GSAP/ScrollTrigger 重建在遮罩下先跑完
+    requestAnimationFrame(() => {
+      animTo("0%", "-100%", REVEAL_MS).then(() => {
+        if (t) t.style.transform = "translateY(100%)";
+      });
+    });
+  });
 </script>

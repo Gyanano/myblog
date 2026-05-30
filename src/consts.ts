@@ -2,7 +2,7 @@ export const SITE = {
   title: "Gyanano · 竹言",
   author: "Gyanano",
   description: "嵌入式与全栈工程师 — 在硬件与软件之间架桥。",
-  email: "contact@gyanano.dev",
+  email: "1624055384@qq.com",
   github: "https://github.com/gyanano",
 };
 
