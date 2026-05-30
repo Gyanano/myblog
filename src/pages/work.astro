@@ -1,0 +1,23 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import { PROJECTS } from "../consts";
+---
+
+<BaseLayout title="术" description="精选项目">
+  <section id="work">
+    <h2 class="gs-title">术 / 实践</h2>
+    <p
+      class="gs-stagger"
+      style="border-left:2px solid var(--cinnabar);padding-left:1rem;font-family:var(--font-calligraphy);font-size:1.6rem;color:var(--ink-dark)"
+    >
+      大音希声，大象无形。<br />
+      <span style="font-family:var(--font-serif);font-size:1rem;color:var(--ink-light)">
+        设计的最高境界，是隐藏设计本身的痕迹。
+      </span>
+    </p>
+    <ul class="works-list gs-stagger">
+      {PROJECTS.map((p) => <ProjectCard project={p} />)}
+    </ul>
+  </section>
+</BaseLayout>

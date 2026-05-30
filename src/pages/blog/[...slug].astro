@@ -1,0 +1,29 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const d = post.data.date.toISOString().slice(0, 10);
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <article id="post" class="gs-stagger">
+    <div style="font-family:var(--font-mono);color:var(--ink-light)">{d}</div>
+    <h1 style="font-size:3rem;margin:0.5rem 0;color:var(--ink-dark)">{post.data.title}</h1>
+    <div style="font-family:var(--font-mono);font-size:0.8rem;color:var(--ink-light);margin-bottom:2.5rem">
+      {post.data.tags.map((t) => `#${t}`).join("  ")}
+    </div>
+    <div class="prose">
+      <Content />
+    </div>
+    <p style="margin-top:3rem">
+      <a href="/blog" data-cursor style="color:var(--cinnabar);text-decoration:none">← 返回墨痕</a>
+    </p>
+  </article>
+</BaseLayout>

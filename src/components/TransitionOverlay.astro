@@ -1,0 +1,44 @@
+---
+// 水墨晕染过场遮罩：路由切换时由下向上盖满，换页后退场。
+---
+
+<div id="ink-transition" aria-hidden="true" transition:persist="ink-transition"></div>
+
+<script>
+  const DURATION_IN = 420;
+  const DURATION_OUT = 480;
+  const EASE = "cubic-bezier(.6,0,.2,1)";
+
+  function el() {
+    return document.getElementById("ink-transition");
+  }
+
+  function coverIn() {
+    const t = el();
+    if (!t) return;
+    t.style.opacity = "1";
+    t.animate(
+      [{ clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0 0 0 0)" }],
+      { duration: DURATION_IN, easing: EASE, fill: "forwards" },
+    );
+  }
+
+  function revealOut() {
+    const t = el();
+    if (!t) return;
+    const anim = t.animate(
+      [{ clipPath: "inset(0 0 0 0)" }, { clipPath: "inset(0 0 100% 0)" }],
+      { duration: DURATION_OUT, easing: EASE, fill: "forwards" },
+    );
+    anim.finished
+      .then(() => {
+        t.style.opacity = "0";
+      })
+      .catch(() => {
+        t.style.opacity = "0";
+      });
+  }
+
+  document.addEventListener("astro:before-swap", coverIn);
+  document.addEventListener("astro:after-swap", revealOut);
+</script>

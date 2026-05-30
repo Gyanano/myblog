@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 600" preserveAspectRatio="xMidYMax slice" width="2400" height="600">
+  <defs>
+    <linearGradient id="far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8a857d" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#8a857d" stop-opacity="0.15"/>
+    </linearGradient>
+    <linearGradient id="mid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4a4641" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#4a4641" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="near" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a2825" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#2a2825" stop-opacity="0.6"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+
+  <!-- 远山 -->
+  <path filter="url(#soft)" fill="url(#far)" d="M0 360
+    C 180 300, 300 320, 460 270
+    S 720 200, 900 250
+    S 1200 320, 1420 260
+    S 1760 190, 1980 250
+    S 2260 310, 2400 280
+    L 2400 600 L 0 600 Z"/>
+
+  <!-- 中山 -->
+  <path fill="url(#mid)" d="M0 440
+    C 160 400, 280 420, 420 380
+    C 560 340, 700 300, 860 360
+    C 1000 412, 1140 470, 1320 410
+    C 1500 350, 1640 300, 1820 370
+    C 2000 440, 2200 470, 2400 420
+    L 2400 600 L 0 600 Z"/>
+
+  <!-- 近山 -->
+  <path fill="url(#near)" d="M0 520
+    C 200 490, 360 510, 540 480
+    C 720 450, 880 430, 1080 480
+    C 1280 530, 1440 540, 1640 500
+    C 1840 460, 2040 470, 2240 500
+    C 2320 512, 2360 516, 2400 514
+    L 2400 600 L 0 600 Z"/>
+
+  <!-- 孤舟与远帆点缀 -->
+  <g fill="#2a2825" opacity="0.5">
+    <path d="M780 470 q 18 -14 36 0 q -18 10 -36 0 Z"/>
+    <rect x="797" y="452" width="2" height="18"/>
+    <path d="M799 452 q 14 4 0 14 Z"/>
+  </g>
+  <g fill="#2a2825" opacity="0.35">
+    <path d="M1560 432 q 12 -9 24 0 q -12 7 -24 0 Z"/>
+    <rect x="1571" y="420" width="1.5" height="12"/>
+    <path d="M1572 420 q 9 3 0 10 Z"/>
+  </g>
+</svg>

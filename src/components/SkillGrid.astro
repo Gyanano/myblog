@@ -1,0 +1,15 @@
+---
+import { SKILLS } from "../consts";
+---
+
+<div class="skill-grid gs-stagger">
+  {SKILLS.map((s) => (
+    <div class="skill-cell">
+      <span class="no">{s.no}</span>
+      <h3>{s.group}</h3>
+      <ul>
+        {s.items.map((i) => <li>{i}</li>)}
+      </ul>
+    </div>
+  ))}
+</div>

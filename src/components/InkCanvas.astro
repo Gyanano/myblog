@@ -1,0 +1,153 @@
+---
+// 全局 WebGL 流体水墨画布，跟随光标晕染。跨页持久保留，避免重建闪烁。
+---
+
+<div
+  id="webgl-container"
+  transition:persist="ink-canvas"
+  aria-hidden="true"
+  style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;mix-blend-mode:multiply;opacity:0.9"
+>
+</div>
+
+<script>
+  import * as THREE from "three";
+
+  function initInk() {
+    if ((window as any).__inkInit) return;
+    const container = document.getElementById("webgl-container");
+    if (!container) return;
+    // WebGL 能力检测，失败则优雅降级为纯宣纸底
+    try {
+      const test = document.createElement("canvas");
+      if (!test.getContext("webgl2") && !test.getContext("webgl")) return;
+    } catch {
+      return;
+    }
+    (window as any).__inkInit = true;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const params: THREE.RenderTargetOptions = {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat,
+      type: THREE.HalfFloatType,
+      depthBuffer: false,
+      stencilBuffer: false,
+    };
+    let resX = window.innerWidth >> 1,
+      resY = window.innerHeight >> 1;
+    let rtA = new THREE.WebGLRenderTarget(resX, resY, params),
+      rtB = new THREE.WebGLRenderTarget(resX, resY, params);
+
+    const simMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        tDiffuse: { value: null },
+        uResolution: { value: new THREE.Vector2(resX, resY) },
+        uMouse: { value: new THREE.Vector2(-1, -1) },
+        uDelta: { value: new THREE.Vector2(0, 0) },
+        uIsDown: { value: 0.0 },
+      },
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`,
+      fragmentShader: `
+        precision highp float; uniform sampler2D tDiffuse; uniform vec2 uResolution; uniform vec2 uMouse; uniform vec2 uDelta; uniform float uIsDown; varying vec2 vUv;
+        void main() {
+          vec2 texel = 1.0 / uResolution; vec2 uv = vUv;
+          float vT = texture2D(tDiffuse, uv + vec2(0.0, texel.y)).g; float vB = texture2D(tDiffuse, uv - vec2(0.0, texel.y)).g;
+          float vR = texture2D(tDiffuse, uv + vec2(texel.x, 0.0)).b; float vL = texture2D(tDiffuse, uv - vec2(texel.x, 0.0)).b;
+          float curl = (vR - vL) - (vT - vB);
+          vec4 state = texture2D(tDiffuse, uv); vec2 vel = state.gb;
+          vel += vec2(curl, -curl) * 0.4;
+          vec2 advectedUv = uv - vel * 0.005;
+          vec4 c = texture2D(tDiffuse, advectedUv); vec4 n = texture2D(tDiffuse, advectedUv + vec2(0.0, texel.y)); vec4 s = texture2D(tDiffuse, advectedUv - vec2(0.0, texel.y)); vec4 e = texture2D(tDiffuse, advectedUv + vec2(texel.x, 0.0)); vec4 w = texture2D(tDiffuse, advectedUv - vec2(texel.x, 0.0));
+          vec4 blurred = (c + n + s + e + w) * 0.2;
+          float ink = mix(c.r, blurred.r, 0.4); vec2 newVel = mix(c.gb, blurred.gb, 0.1);
+          float aspect = uResolution.x / uResolution.y; vec2 aspectUv = uv * vec2(aspect, 1.0); vec2 aspectMouse = uMouse * vec2(aspect, 1.0); float dist = distance(aspectUv, aspectMouse);
+          if (uIsDown > 0.5 && dist < 0.04) { float falloff = smoothstep(0.04, 0.0, dist); ink = max(ink, falloff * 1.0); newVel += uDelta * falloff * 5.0; }
+          ink *= 0.995; newVel *= 0.98; gl_FragColor = vec4(ink, newVel.x, newVel.y, 1.0);
+        }
+      `,
+    });
+
+    const displayMaterial = new THREE.ShaderMaterial({
+      uniforms: { tDiffuse: { value: null } },
+      vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`,
+      fragmentShader: `
+        precision highp float; uniform sampler2D tDiffuse; varying vec2 vUv;
+        void main() {
+          float ink = texture2D(tDiffuse, vUv).r;
+          vec3 darkInk = vec3(0.16, 0.15, 0.14); vec3 lightInk = vec3(0.54, 0.52, 0.49);
+          vec3 color = mix(lightInk, darkInk, smoothstep(0.1, 0.8, ink));
+          gl_FragColor = vec4(color, clamp(ink, 0.0, 1.0));
+        }
+      `,
+      transparent: true,
+    });
+
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const quad = new THREE.Mesh(geometry, simMaterial);
+    scene.add(quad);
+    let mouse = new THREE.Vector2(0.5, 0.5),
+      targetDelta = new THREE.Vector2(0, 0),
+      moveTimer: ReturnType<typeof setTimeout>;
+
+    function handleMove(clientX: number, clientY: number) {
+      let x = clientX / window.innerWidth,
+        y = 1.0 - clientY / window.innerHeight;
+      targetDelta.x = (x - mouse.x) * 15.0;
+      targetDelta.y = (y - mouse.y) * 15.0;
+      mouse.x = x;
+      mouse.y = y;
+      simMaterial.uniforms.uMouse.value.copy(mouse);
+      simMaterial.uniforms.uDelta.value.copy(targetDelta);
+      simMaterial.uniforms.uIsDown.value = 1.0;
+      clearTimeout(moveTimer);
+      moveTimer = setTimeout(() => {
+        simMaterial.uniforms.uIsDown.value = 0.0;
+      }, 50);
+    }
+
+    window.addEventListener("mousemove", (e) => handleMove(e.clientX, e.clientY));
+    window.addEventListener("touchmove", (e) => {
+      if (e.touches[0]) handleMove(e.touches[0].clientX, e.touches[0].clientY);
+    });
+
+    window.addEventListener("resize", () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      resX = window.innerWidth >> 1;
+      resY = window.innerHeight >> 1;
+      rtA.setSize(resX, resY);
+      rtB.setSize(resX, resY);
+      simMaterial.uniforms.uResolution.value.set(resX, resY);
+    });
+
+    function render() {
+      requestAnimationFrame(render);
+      quad.material = simMaterial;
+      simMaterial.uniforms.tDiffuse.value = rtA.texture;
+      renderer.setRenderTarget(rtB);
+      renderer.render(scene, camera);
+      quad.material = displayMaterial;
+      displayMaterial.uniforms.tDiffuse.value = rtB.texture;
+      renderer.setRenderTarget(null);
+      renderer.render(scene, camera);
+      let temp = rtA;
+      rtA = rtB;
+      rtB = temp;
+    }
+    render();
+    // 初始播一笔，让画面不空
+    setTimeout(() => {
+      handleMove(window.innerWidth / 2, window.innerHeight / 2);
+      setTimeout(() => handleMove(window.innerWidth / 2 + 20, window.innerHeight / 2 + 20), 50);
+    }, 800);
+  }
+
+  document.addEventListener("astro:page-load", initInk);
+</script>

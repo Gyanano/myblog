@@ -1,0 +1,23 @@
+---
+import { SITE } from "../consts";
+---
+
+<footer
+  style="position:relative;z-index:10;max-width:800px;margin:0 auto;padding:6rem 2rem 4rem;text-align:center"
+>
+  <h2 style="font-family:var(--font-calligraphy);font-size:2.4rem">结 / 缘起</h2>
+  <p style="text-align:center;color:var(--ink-light);margin-bottom:1.5rem">
+    若有想法渴望落地，欢迎留下墨宝。
+  </p>
+  <p style="font-family:var(--font-mono);font-size:1rem;text-align:center">
+    <a
+      href={`mailto:${SITE.email}`}
+      data-cursor
+      style="color:var(--cinnabar);text-decoration:none;border-bottom:1px dotted var(--cinnabar);padding-bottom:4px"
+      >{SITE.email}</a
+    >
+  </p>
+  <p style="margin-top:1rem;text-align:center">
+    <a href={SITE.github} data-cursor style="color:var(--ink-base);text-decoration:none">GitHub ↗</a>
+  </p>
+</footer>

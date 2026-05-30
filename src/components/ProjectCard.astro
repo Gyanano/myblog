@@ -1,0 +1,31 @@
+---
+import type { Project } from "../consts";
+interface Props {
+  project: Project;
+}
+const { project } = Astro.props;
+---
+
+<li style="margin-bottom:2.5rem;padding-bottom:2.5rem;border-bottom:1px dashed var(--ink-wash)">
+  <div style="font-family:var(--font-mono);color:var(--ink-light);font-size:0.9rem">
+    &gt; {project.boot}<br />
+    &gt; loading modules: [{project.stack.join(", ")}]<br />
+    &gt; status: <span style="color:var(--cinnabar)">ready</span>
+  </div>
+  <div style="font-family:var(--font-mono);color:var(--ink-light);margin:0.6rem 0 0.2rem;font-size:0.85rem">
+    {project.no} // {project.tag}
+  </div>
+  <h3 style="font-size:1.5rem;font-weight:600;margin:0.3rem 0;color:var(--ink-dark)">
+    {project.title}
+  </h3>
+  <p>{project.desc}</p>
+  <div style="font-family:var(--font-mono);font-size:0.85rem;color:var(--ink-base);margin-bottom:0.6rem">
+    {project.stack.join("  ·  ")}
+  </div>
+  <a
+    href={project.code}
+    data-cursor
+    style="color:var(--cinnabar);font-family:var(--font-mono);text-decoration:none;border-bottom:1px dotted var(--cinnabar)"
+    >Code ↗</a
+  >
+</li>

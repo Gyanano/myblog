@@ -1,0 +1,89 @@
+---
+// 终端输入彩蛋：输入 hello world / 你好世界 触发全屏水墨绽放。支持中文输入法。
+---
+
+<div class="terminal-wrapper gs-fade-up">
+  <div class="terminal-label">唤醒水墨，只需一句问候</div>
+  <div class="terminal">
+    <span class="prompt">~ %</span>
+    <input
+      type="text"
+      id="code-input"
+      autocomplete="off"
+      spellcheck="false"
+      placeholder="Type here..."
+      data-cursor
+    />
+    <span class="blinking-cursor"></span>
+  </div>
+</div>
+
+<div id="easter-egg-canvas" aria-hidden="true">
+  <div class="ink-text" id="egg-text">Hello World</div>
+</div>
+
+<script>
+  function initTerminal() {
+    const codeInput = document.getElementById("code-input") as HTMLInputElement | null;
+    const eggCanvas = document.getElementById("easter-egg-canvas");
+    const eggText = document.getElementById("egg-text");
+    if (!codeInput || !eggCanvas || !eggText) return;
+    if (codeInput.dataset.bound === "1") return;
+    codeInput.dataset.bound = "1";
+
+    let eggTimeout: ReturnType<typeof setTimeout>;
+    let isComposing = false;
+    const matches = ["hello world", "helloworld", "你好世界"];
+
+    function checkInput(value: string) {
+      const val = value.trim().toLowerCase();
+      if (matches.includes(val)) {
+        triggerEasterEgg();
+        codeInput!.value = "";
+      }
+    }
+
+    codeInput.addEventListener("compositionstart", () => {
+      isComposing = true;
+    });
+    codeInput.addEventListener("compositionend", (e) => {
+      isComposing = false;
+      checkInput((e.target as HTMLInputElement).value);
+    });
+    codeInput.addEventListener("input", function () {
+      if (!isComposing) checkInput(this.value);
+    });
+    codeInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !isComposing) {
+        const val = this.value.trim().toLowerCase();
+        if (!matches.includes(val) && val !== "") {
+          const wrap = this.parentElement!;
+          wrap.style.transform = "translateX(-5px)";
+          setTimeout(() => (wrap.style.transform = "translateX(5px)"), 50);
+          setTimeout(() => (wrap.style.transform = "translateX(0)"), 100);
+        }
+        checkInput(this.value);
+        if (this.value !== "") this.value = "";
+      }
+    });
+
+    function triggerEasterEgg() {
+      codeInput!.blur();
+      if (eggTimeout) clearTimeout(eggTimeout);
+      eggCanvas!.style.opacity = "1";
+      eggText!.classList.remove("trigger");
+      document.body.style.transition = "background-color 2s";
+      document.body.style.backgroundColor = "#FFFFFF";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => eggText!.classList.add("trigger"));
+      });
+      eggTimeout = setTimeout(() => {
+        eggCanvas!.style.opacity = "0";
+        document.body.style.backgroundColor = "var(--paper-bg)";
+        setTimeout(() => eggText!.classList.remove("trigger"), 1000);
+      }, 5500);
+    }
+  }
+
+  document.addEventListener("astro:page-load", initTerminal);
+</script>

@@ -1,0 +1,14 @@
+---
+import { SITE, NAV } from "../consts";
+---
+
+<header>
+  <a class="logo" href="/" data-cursor>{SITE.author}</a>
+  <nav>
+    <ul>
+      {NAV.map((n) => (
+        <li><a href={n.href}>{n.label}</a></li>
+      ))}
+    </ul>
+  </nav>
+</header>

@@ -1,0 +1,518 @@
+:root {
+  /* 宣纸暖米色 */
+  --paper-bg: #f2efe8;
+  /* 高对比度噪点宣纸纹理 */
+  --paper-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.12'/%3E%3C/svg%3E");
+  /* 墨色层级 */
+  --ink-dark: #2a2825;
+  --ink-base: #4a4641;
+  --ink-light: #8a857d;
+  --ink-wash: rgba(42, 40, 37, 0.05);
+  /* 印泥朱砂红 */
+  --cinnabar: #be3a3a;
+
+  --font-serif: "Noto Serif SC", serif;
+  --font-mono: "Fira Code", monospace;
+  --font-calligraphy: "Zhi Mang Xing", cursive;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 仅在精确指针（鼠标）设备隐藏系统光标，触屏保留 */
+@media (pointer: fine) {
+  * {
+    cursor: none;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--paper-bg);
+  background-image: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.04) 100%),
+    var(--paper-texture);
+  color: var(--ink-dark);
+  font-family: var(--font-serif);
+  overflow-x: hidden;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* 顶部水印书法 */
+.watermark {
+  position: fixed;
+  top: -5%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20vw;
+  color: var(--ink-dark);
+  opacity: 0.02;
+  white-space: nowrap;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  font-family: var(--font-calligraphy);
+}
+
+/* 背景分散排布的代码诗 (fixed 定位，钉在屏幕上) */
+.code-poetry-bg {
+  position: fixed;
+  font-family: var(--font-mono);
+  color: var(--ink-dark);
+  opacity: 0.12;
+  font-size: 1.2rem;
+  line-height: 1.8;
+  pointer-events: none;
+  z-index: 0;
+  white-space: pre-wrap;
+}
+
+/* 导航头 */
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 2rem 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  background: linear-gradient(to bottom, var(--paper-bg) 0%, transparent 100%);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ink-dark);
+  letter-spacing: 0.1em;
+  text-decoration: none;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 3rem;
+}
+
+nav a {
+  text-decoration: none;
+  color: var(--ink-base);
+  position: relative;
+  padding-bottom: 4px;
+  transition: color 0.3s;
+  font-size: 1.2rem;
+}
+nav a::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--ink-dark);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border-radius: 50% 50% 50% 50% / 100% 100% 0 0;
+}
+nav a:hover {
+  color: var(--ink-dark);
+}
+nav a:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* 页面主要容器 */
+main {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 18vh;
+  padding-bottom: 10vh;
+  min-height: 70vh;
+}
+
+section,
+article {
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 12vh;
+  padding: 0 2rem;
+  position: relative;
+}
+
+/* 放大且拉宽的终端输入区 */
+.terminal-wrapper {
+  margin: 0 auto 8vh auto;
+  width: 80%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.terminal-label {
+  font-size: 1.2rem;
+  color: var(--ink-light);
+  margin-bottom: 2rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
+.terminal {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 1rem 0;
+  font-family: var(--font-mono);
+  font-size: 2.2rem;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.terminal::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--ink-base) 10%,
+    var(--ink-dark) 50%,
+    var(--ink-base) 90%,
+    transparent 100%
+  );
+  opacity: 0.4;
+  transition: opacity 0.3s, height 0.3s;
+}
+.terminal:hover::after,
+.terminal:focus-within::after {
+  opacity: 0.8;
+  height: 3px;
+}
+
+.prompt {
+  color: var(--ink-base);
+  margin-right: 1.5rem;
+  font-weight: 300;
+}
+
+#code-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ink-dark);
+  font-family: var(--font-mono);
+  font-size: 2.2rem;
+  flex: 1;
+  min-width: 0;
+  caret-color: transparent;
+  letter-spacing: 0.05em;
+}
+
+.blinking-cursor {
+  display: inline-block;
+  width: 12px;
+  height: 1.2em;
+  background-color: var(--cinnabar);
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+  margin-left: 8px;
+  opacity: 0.8;
+  border-radius: 1px;
+}
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* 文本排版 */
+h1 {
+  font-family: var(--font-calligraphy);
+  font-weight: 400;
+}
+
+h2 {
+  font-family: var(--font-calligraphy);
+  font-size: 3.5rem;
+  font-weight: 400;
+  margin-bottom: 2.5rem;
+  color: var(--ink-dark);
+  text-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+}
+
+p {
+  color: var(--ink-base);
+  margin-bottom: 1.5rem;
+  text-align: justify;
+  font-size: 1.1rem;
+}
+
+/* 实践 / 列表区块 */
+.works-list {
+  list-style: none;
+}
+.works-list li {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px dashed var(--ink-wash);
+}
+.works-list h3 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: var(--ink-dark);
+  font-weight: 600;
+}
+
+/* 水平滚动的中国水墨山水长卷 */
+.scroll-painting-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60vh;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  mask-image: linear-gradient(to top, black 20%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, black 20%, transparent 100%);
+  opacity: 0.22;
+}
+
+.scroll-painting {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 300vw;
+  height: 100%;
+  background-image: url("/landscape.svg");
+  background-size: cover;
+  background-position: left bottom;
+  background-repeat: no-repeat;
+  will-change: transform;
+  transform: translateX(0);
+}
+
+/* 彩蛋：水墨晕染特效容器 */
+#easter-egg-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.ink-text {
+  font-family: var(--font-calligraphy);
+  font-size: 12vw;
+  color: transparent;
+  text-shadow: 0 0 0 var(--ink-dark);
+  filter: url(#ink-bleed-filter);
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.ink-text.trigger {
+  animation: ink-bloom 5s cubic-bezier(0.1, 0.8, 0.1, 1) forwards;
+}
+
+@keyframes ink-bloom {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+    filter: url(#ink-bleed-filter) blur(10px);
+    text-shadow: 0 0 20px var(--ink-dark);
+  }
+  30% {
+    opacity: 1;
+    filter: url(#ink-bleed-filter) blur(2px);
+    text-shadow: 0 0 2px var(--ink-dark);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
+    filter: url(#ink-bleed-filter) blur(15px);
+    text-shadow: 0 0 30px var(--ink-dark);
+  }
+}
+
+/* 自定义光标 */
+#ink-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink-dark);
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, opacity 0.2s, background 0.2s;
+  mix-blend-mode: multiply;
+}
+@media (pointer: coarse) {
+  #ink-cursor {
+    display: none;
+  }
+}
+
+/* 水墨过场遮罩 */
+#ink-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--ink-dark) 0%, #1d1b19 100%);
+  opacity: 0;
+  clip-path: inset(0 0 100% 0);
+}
+
+/* 数据统计 */
+.stats {
+  display: flex;
+  gap: 4rem;
+  margin: 2.5rem 0;
+}
+.stats .value {
+  font-family: var(--font-mono);
+  font-size: 2.5rem;
+  color: var(--ink-dark);
+}
+.stats .label {
+  color: var(--ink-light);
+}
+
+/* 技能栅格 */
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+}
+.skill-cell .no {
+  font-family: var(--font-mono);
+  color: var(--ink-light);
+}
+.skill-cell h3 {
+  font-weight: 600;
+  margin: 0.4rem 0;
+  color: var(--ink-dark);
+}
+.skill-cell ul {
+  list-style: none;
+}
+.skill-cell li {
+  color: var(--ink-base);
+  padding: 0.15rem 0;
+}
+
+/* 文章正文排版 */
+.prose {
+  font-size: 1.1rem;
+  color: var(--ink-base);
+}
+.prose :is(h2, h3) {
+  font-family: var(--font-serif);
+  color: var(--ink-dark);
+  margin: 2rem 0 1rem;
+  text-shadow: none;
+}
+.prose h2 {
+  font-size: 1.8rem;
+}
+.prose h3 {
+  font-size: 1.4rem;
+}
+.prose p {
+  margin-bottom: 1.4rem;
+}
+.prose a {
+  color: var(--cinnabar);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--cinnabar);
+}
+.prose code {
+  font-family: var(--font-mono);
+  background: var(--ink-wash);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+.prose pre {
+  font-family: var(--font-mono);
+  background: rgba(42, 40, 37, 0.06);
+  padding: 1.2rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-bottom: 1.4rem;
+}
+.prose pre code {
+  background: none;
+  padding: 0;
+}
+.prose blockquote {
+  border-left: 2px solid var(--cinnabar);
+  padding-left: 1rem;
+  color: var(--ink-light);
+  margin-bottom: 1.4rem;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  header {
+    padding: 1.5rem;
+  }
+  nav ul {
+    gap: 1.5rem;
+  }
+  .terminal-wrapper {
+    width: 95%;
+  }
+  .terminal,
+  #code-input {
+    font-size: 1.5rem;
+  }
+  h2 {
+    font-size: 2.6rem;
+  }
+  section,
+  article {
+    padding: 0 1.5rem;
+  }
+  .scroll-painting-container {
+    height: 40vh;
+  }
+  .stats {
+    gap: 2rem;
+  }
+}

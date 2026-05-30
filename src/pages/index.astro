@@ -1,11 +1,32 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import TerminalInput from "../components/TerminalInput.astro";
+import CodePoetry from "../components/CodePoetry.astro";
+import ScrollLandscape from "../components/ScrollLandscape.astro";
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<BaseLayout>
+  <CodePoetry />
+  <ScrollLandscape />
+  <section id="hero" style="padding-top:4vh">
+    <TerminalInput />
+    <h1
+      class="gs-fade-up"
+      style="text-align:center;font-size:5rem;margin-top:2vh;color:var(--ink-dark)"
+    >
+      Gyanano
+    </h1>
+    <p
+      class="gs-fade-up"
+      style="text-align:center;font-size:1.2rem;color:var(--ink-light);margin-top:0.5rem"
+    >
+      在硅与浏览器之间，落笔生万物
+    </p>
+    <p
+      class="gs-fade-up"
+      style="text-align:center;font-family:var(--font-mono);font-size:0.95rem;color:var(--ink-light);margin-top:1.5rem"
+    >
+      嵌入式 · 全栈 · INTP
+    </p>
+  </section>
+</BaseLayout>

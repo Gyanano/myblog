@@ -1,0 +1,30 @@
+---
+// 底部水墨山水长卷，随滚动横向视差移动。跨页保留。
+---
+
+<div class="scroll-painting-container" aria-hidden="true" transition:persist="landscape">
+  <div class="scroll-painting" id="scroll-painting"></div>
+</div>
+
+<script>
+  function initLandscape() {
+    if ((window as any).__landscapeInit) return;
+    (window as any).__landscapeInit = true;
+    const painting = document.getElementById("scroll-painting");
+    if (!painting) return;
+    let ticking = false;
+    window.addEventListener("scroll", () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = scrollHeight > 0 ? scrollY / scrollHeight : 0;
+        const translateX = progress * -30;
+        painting.style.transform = `translateX(calc(-10% + ${translateX}%))`;
+        ticking = false;
+      });
+    });
+  }
+  document.addEventListener("astro:page-load", initLandscape);
+</script>

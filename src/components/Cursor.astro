@@ -1,0 +1,27 @@
+---
+// 自定义墨点光标，hover 可交互元素时放大变淡。
+---
+
+<div id="ink-cursor" aria-hidden="true" transition:persist="cursor"></div>
+
+<script>
+  function initCursor() {
+    if ((window as any).__cursorInit) return;
+    (window as any).__cursorInit = true;
+    const c = document.getElementById("ink-cursor");
+    if (!c) return;
+    window.addEventListener("mousemove", (e) => {
+      c.style.left = e.clientX + "px";
+      c.style.top = e.clientY + "px";
+    });
+    document.addEventListener("mouseover", (e) => {
+      const t = e.target as HTMLElement;
+      const big = t.closest("a, button, input, [data-cursor]");
+      c.style.width = big ? "28px" : "10px";
+      c.style.height = big ? "28px" : "10px";
+      c.style.opacity = big ? "0.4" : "1";
+      c.style.background = big ? "var(--cinnabar)" : "var(--ink-dark)";
+    });
+  }
+  document.addEventListener("astro:page-load", initCursor);
+</script>

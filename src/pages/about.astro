@@ -1,0 +1,36 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SkillGrid from "../components/SkillGrid.astro";
+import { STATS } from "../consts";
+---
+
+<BaseLayout title="道" description="理念与技能">
+  <section id="about">
+    <h2 class="gs-title">道 / 理念</h2>
+    <div class="gs-stagger">
+      <p>
+        INTP-A「逻辑学家」。我不只是写代码，而是构建逻辑架构。我的热情在于深入底层——理解一个电子穿过晶体管，如何最终成为屏幕上的一个像素。
+      </p>
+      <p>
+        当前我在 MCU 嵌入式领域工作，让硬件焕发生命；但好奇心不止于寄存器层。我同时构建全栈 Web 应用，因为我相信最好的系统应当从硅到浏览器一气呵成、无缝衔接。
+      </p>
+      <p>
+        我的设计哲学是极简而功能性的，正如我努力写出的代码。我推崇清晰的抽象、类型安全与高效的内存管理。
+      </p>
+    </div>
+    <div class="stats gs-stagger">
+      {STATS.map((st) => (
+        <div>
+          <div class="value">{st.value}</div>
+          <div class="label">{st.label}</div>
+        </div>
+      ))}
+    </div>
+    <h3
+      style="font-family:var(--font-mono);color:var(--ink-light);margin:3rem 0 1.5rem;letter-spacing:0.2em"
+    >
+      // 技能矩阵
+    </h3>
+    <SkillGrid />
+  </section>
+</BaseLayout>

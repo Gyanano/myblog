@@ -1,0 +1,27 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  date: Date;
+  description: string;
+  tags: string[];
+}
+const { href, title, date, description, tags } = Astro.props;
+const d = date.toISOString().slice(0, 10);
+---
+
+<a
+  href={href}
+  class="post-card"
+  data-cursor
+  style="display:block;text-decoration:none;color:inherit;padding:2rem 0;border-bottom:1px dashed var(--ink-wash)"
+>
+  <div style="font-family:var(--font-mono);color:var(--ink-light);font-size:0.85rem">{d}</div>
+  <h3 style="font-family:var(--font-calligraphy);font-size:2rem;margin:0.4rem 0;color:var(--ink-dark)">
+    {title}
+  </h3>
+  <p style="color:var(--ink-base);margin-bottom:0.6rem">{description}</p>
+  <div style="font-family:var(--font-mono);font-size:0.8rem;color:var(--ink-light)">
+    {tags.map((t) => `#${t}`).join("  ")}
+  </div>
+</a>
