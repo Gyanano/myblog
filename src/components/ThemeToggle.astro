@@ -26,10 +26,22 @@
   function animT(from: string, to: string, dur: number) {
     const t = overlay();
     if (!t) return Promise.resolve();
-    return t.animate(
+    // 清掉遗留动画，杜绝 fill:forwards 累积并覆盖 inline 复位（多次切换后揭幕瞬跳的真凶）
+    t.getAnimations().forEach((a) => a.cancel());
+    t.style.transform = `translateY(${from})`;
+    const anim = t.animate(
       [{ transform: `translateY(${from})` }, { transform: `translateY(${to})` }],
       { duration: dur, easing: EASE, fill: "forwards" },
-    ).finished;
+    );
+    return anim.finished
+      .then(() => {
+        // 把终态写进 inline，再撤掉动画——不留 fill，inline 复位才真正生效
+        try {
+          anim.commitStyles();
+        } catch {}
+        anim.cancel();
+      })
+      .catch(() => {});
   }
   function wait(ms: number) {
     return new Promise((r) => window.setTimeout(r, ms));

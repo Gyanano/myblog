@@ -25,10 +25,21 @@
   function animTo(from: string, to: string, dur: number) {
     const t = el();
     if (!t) return Promise.resolve();
-    return t.animate(
+    // 清掉遗留动画，杜绝 fill:forwards 累积并覆盖 inline 复位
+    t.getAnimations().forEach((a) => a.cancel());
+    t.style.transform = `translateY(${from})`;
+    const anim = t.animate(
       [{ transform: `translateY(${from})` }, { transform: `translateY(${to})` }],
       { duration: dur, easing: EASE, fill: "forwards" },
-    ).finished;
+    );
+    return anim.finished
+      .then(() => {
+        try {
+          anim.commitStyles();
+        } catch {}
+        anim.cancel();
+      })
+      .catch(() => {});
   }
 
   function isInternalNav(a: HTMLAnchorElement): string | null {
