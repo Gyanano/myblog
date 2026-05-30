@@ -42,29 +42,6 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
         } catch (e) {}
       })();
     </script>
-    <script is:inline>
-      // 绕过浏览器 View Transitions 的整页快照开销：我们用水墨遮罩自己做过场，
-      // 不需要浏览器对整页（含全屏 canvas）拍快照。让 Astro 路由直接换 DOM。
-      (function () {
-        if (typeof document === "undefined" || !document.startViewTransition) return;
-        document.startViewTransition = function (cb) {
-          var update = typeof cb === "function" ? cb : cb && cb.update;
-          var done;
-          try {
-            done = Promise.resolve(update ? update() : undefined);
-          } catch (e) {
-            done = Promise.reject(e);
-          }
-          return {
-            ready: Promise.resolve(),
-            updateCallbackDone: done,
-            finished: done,
-            skipTransition: function () {},
-            types: new Set(),
-          };
-        };
-      })();
-    </script>
     <ClientRouter />
   </head>
   <body>
