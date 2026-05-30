@@ -1,42 +1,43 @@
 ---
-// 水墨晕染过场遮罩：路由切换时由下向上盖满，换页后退场。
+// 水墨晕染过场遮罩：路由切换时由下向上滑入盖满，换页后继续上滑揭开。
+// 仅用 transform: translateY（合成层），开销低、动画快。
 ---
 
 <div id="ink-transition" aria-hidden="true" transition:persist="ink-transition"></div>
 
 <script>
-  const DURATION_IN = 420;
-  const DURATION_OUT = 480;
+  const DURATION_IN = 360;
+  const DURATION_OUT = 380;
   const EASE = "cubic-bezier(.6,0,.2,1)";
 
   function el() {
     return document.getElementById("ink-transition");
   }
 
+  // 由下方滑入，盖满屏幕
   function coverIn() {
     const t = el();
     if (!t) return;
-    t.style.opacity = "1";
-    t.animate(
-      [{ clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0 0 0 0)" }],
-      { duration: DURATION_IN, easing: EASE, fill: "forwards" },
-    );
+    t.animate([{ transform: "translateY(100%)" }, { transform: "translateY(0%)" }], {
+      duration: DURATION_IN,
+      easing: EASE,
+      fill: "forwards",
+    });
   }
 
+  // 继续向上滑出，揭开新页；结束后复位到屏幕下方待命
   function revealOut() {
     const t = el();
     if (!t) return;
-    const anim = t.animate(
-      [{ clipPath: "inset(0 0 0 0)" }, { clipPath: "inset(0 0 100% 0)" }],
-      { duration: DURATION_OUT, easing: EASE, fill: "forwards" },
-    );
-    anim.finished
-      .then(() => {
-        t.style.opacity = "0";
-      })
-      .catch(() => {
-        t.style.opacity = "0";
-      });
+    const anim = t.animate([{ transform: "translateY(0%)" }, { transform: "translateY(-100%)" }], {
+      duration: DURATION_OUT,
+      easing: EASE,
+      fill: "forwards",
+    });
+    const reset = () => {
+      t.style.transform = "translateY(100%)";
+    };
+    anim.finished.then(reset).catch(reset);
   }
 
   document.addEventListener("astro:before-swap", coverIn);

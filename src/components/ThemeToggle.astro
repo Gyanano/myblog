@@ -27,21 +27,20 @@
         applyTheme(next);
         return;
       }
-      t.style.opacity = "1";
-      t.animate([{ clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0 0 0 0)" }], {
+      t.animate([{ transform: "translateY(100%)" }, { transform: "translateY(0%)" }], {
         duration: 300,
         easing: "cubic-bezier(.6,0,.2,1)",
         fill: "forwards",
       }).finished.then(() => {
         applyTheme(next);
-        const out = t.animate([{ clipPath: "inset(0 0 0 0)" }, { clipPath: "inset(0 0 100% 0)" }], {
-          duration: 360,
-          easing: "cubic-bezier(.6,0,.2,1)",
-          fill: "forwards",
-        });
-        out.finished.then(() => {
-          t.style.opacity = "0";
-        });
+        const out = t.animate(
+          [{ transform: "translateY(0%)" }, { transform: "translateY(-100%)" }],
+          { duration: 360, easing: "cubic-bezier(.6,0,.2,1)", fill: "forwards" },
+        );
+        const reset = () => {
+          t.style.transform = "translateY(100%)";
+        };
+        out.finished.then(reset).catch(reset);
       });
     });
   }

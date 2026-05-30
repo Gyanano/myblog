@@ -216,9 +216,9 @@
     }
     (window as any).__inkSplash = inkSplash;
 
-    // 点击泼墨：任意处点击注入墨点（与既有墨迹同源）
+    // 点击泼墨：任意处点击注入一小团墨（收敛、克制）
     window.addEventListener("click", (e) => {
-      inkSplash(e.clientX, e.clientY, 0.16, 0.85);
+      inkSplash(e.clientX, e.clientY, 0.09, 0.6);
     });
 
     // 初始播一笔，让画面不空，随后进入空闲暂停

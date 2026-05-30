@@ -1,6 +1,6 @@
 ---
 // 底部水墨山水长卷（《富春山居图》局部）。随页面滚动横向平移，
-// 如展开长卷从左看到右；山体整体向左移动，营造置身画中的卷轴感。跨页保留。
+// 用 rAF 阻尼跟随（缓动），让山体平移带有惯性/阻尼感，不生硬。跨页保留。
 ---
 
 <div class="scroll-painting-container" aria-hidden="true" transition:persist="landscape">
@@ -14,32 +14,61 @@
     const painting = document.getElementById("scroll-painting") as HTMLImageElement | null;
     if (!painting) return;
 
-    let ticking = false;
-    const update = () => {
-      const scrollY = window.scrollY;
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = scrollHeight > 0 ? Math.min(1, Math.max(0, scrollY / scrollHeight)) : 0;
-      // 整幅长卷从左端平移到右端：山体随滚动向左移动
-      const maxX = painting.scrollWidth - window.innerWidth;
-      const x = -progress * Math.max(0, maxX);
-      painting.style.transform = `translateX(${x}px)`;
-      ticking = false;
+    let target = 0;
+    let current = 0;
+    let running = false;
+    let raf = 0;
+
+    const computeTarget = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      const p = h > 0 ? Math.min(1, Math.max(0, window.scrollY / h)) : 0;
+      const maxX = Math.max(0, painting.scrollWidth - window.innerWidth);
+      target = -p * maxX;
+    };
+
+    const tick = () => {
+      // 阻尼缓动：每帧朝目标靠近一定比例，产生惯性拖尾
+      current += (target - current) * 0.085;
+      if (Math.abs(target - current) < 0.4) {
+        current = target;
+        running = false;
+      }
+      painting.style.transform = `translate3d(${current}px,0,0)`;
+      if (running) raf = requestAnimationFrame(tick);
+    };
+
+    const start = () => {
+      if (running) return;
+      running = true;
+      raf = requestAnimationFrame(tick);
     };
 
     window.addEventListener(
       "scroll",
       () => {
-        if (ticking) return;
-        ticking = true;
-        window.requestAnimationFrame(update);
+        computeTarget();
+        start();
       },
       { passive: true },
     );
-    window.addEventListener("resize", update);
-    // 图片尺寸就绪后再算一次
-    if (painting.complete) update();
-    else painting.addEventListener("load", update, { once: true });
-    update();
+    window.addEventListener("resize", () => {
+      computeTarget();
+      start();
+    });
+    // 换页后（滚动位置归零）重新对齐
+    document.addEventListener("astro:page-load", () => {
+      computeTarget();
+      start();
+    });
+
+    const onReady = () => {
+      computeTarget();
+      current = target;
+      painting.style.transform = `translate3d(${current}px,0,0)`;
+    };
+    if (painting.complete && painting.naturalWidth) onReady();
+    else painting.addEventListener("load", onReady, { once: true });
   }
+
   document.addEventListener("astro:page-load", initLandscape);
 </script>

@@ -34,21 +34,26 @@
       const splash = (window as any).__inkSplash as
         | ((x: number, y: number, r?: number, s?: number) => void)
         | undefined;
+      if (!splash) return;
       const W = window.innerWidth;
       const H = window.innerHeight;
-      if (!splash) return;
-      // 中心一大团，随后几处错落小团，模拟泼墨四溅
-      splash(W * 0.5, H * 0.5, 0.36, 1.0);
-      const pts: [number, number, number][] = [
-        [0.32, 0.42, 0.2],
-        [0.68, 0.46, 0.22],
-        [0.45, 0.66, 0.18],
-        [0.6, 0.3, 0.16],
-        [0.38, 0.28, 0.14],
-      ];
-      pts.forEach((p, i) =>
-        setTimeout(() => splash(W * p[0], H * p[1], p[2], 0.9), 90 * (i + 1)),
-      );
+      // 先来一大团居中铺底
+      splash(W * 0.5, H * 0.5, 0.5, 1.0);
+      // 再按网格铺满整屏（含抖动），确保大屏也能晕染到边缘
+      const cols = 5;
+      const rows = 3;
+      let i = 0;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const jx = (Math.random() - 0.5) * 0.12;
+          const jy = (Math.random() - 0.5) * 0.12;
+          const x = ((c + 0.5) / cols + jx) * W;
+          const y = ((r + 0.5) / rows + jy) * H;
+          const rad = 0.26 + Math.random() * 0.16;
+          setTimeout(() => splash(x, y, rad, 0.9), 55 * (i + 1));
+          i++;
+        }
+      }
     }
 
     function checkInput(value: string) {

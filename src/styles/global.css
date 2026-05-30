@@ -374,15 +374,16 @@ p {
   }
 }
 
-/* 水墨过场遮罩（始终为墨色，不随主题反转） */
+/* 水墨过场遮罩（始终为墨色，不随主题反转）。
+   用 transform: translateY 走合成层，避免 clip-path 的重绘开销。 */
 #ink-transition {
   position: fixed;
   inset: 0;
   z-index: 9000;
   pointer-events: none;
   background: linear-gradient(180deg, #2a2825 0%, #1d1b19 100%);
-  opacity: 0;
-  clip-path: inset(0 0 100% 0);
+  transform: translateY(100%);
+  will-change: transform;
 }
 
 /* 昼夜切换印章按钮 */
