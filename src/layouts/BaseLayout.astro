@@ -42,6 +42,33 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
         } catch (e) {}
       })();
     </script>
+    <script is:inline>
+      // 绕过浏览器原生 View Transitions 的整页快照：过场由我们自己的水墨遮罩完成，
+      // 不需要浏览器为一个用不到的视觉过渡拍新旧两张快照（换页卡顿的真凶，codex 经
+      // 读 Astro 运行时源码确认）。必须在 <ClientRouter /> 加载前替换，
+      // 这样 Astro 探测 supportsViewTransitions 时拿到的就是这个直通实现。
+      // 注：主题切换从不调用 navigate()/startViewTransition，故此改动不影响主题切换。
+      (function () {
+        if (!document.startViewTransition) return;
+        document.startViewTransition = function (updateCallback) {
+          var updateCallbackDone = Promise.resolve().then(updateCallback);
+          var finished = updateCallbackDone.then(function () {
+            return new Promise(function (resolve) {
+              requestAnimationFrame(function () {
+                requestAnimationFrame(resolve);
+              });
+            });
+          });
+          return {
+            updateCallbackDone: updateCallbackDone,
+            ready: updateCallbackDone,
+            finished: finished,
+            skipTransition: function () {},
+            types: new Set(),
+          };
+        };
+      })();
+    </script>
     <ClientRouter />
   </head>
   <body>
