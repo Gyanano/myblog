@@ -64,6 +64,7 @@
       busy = true;
       (window as any).__inkNav = true; // 通知 BaseLayout：入场动画等揭幕后再播
       (window as any).__inkPause?.(); // 过渡期间暂停墨场，腾出资源
+      document.documentElement.classList.add("ink-transitioning"); // 关闭全屏混合
       const t = el();
       if (t) t.style.transform = "translateY(100%)";
       animTo("100%", "0%", COVER_MS).then(() => {
@@ -93,6 +94,7 @@
           animTo("0%", "-100%", REVEAL_MS).then(() => {
             if (t) t.style.transform = "translateY(100%)";
             (window as any).__inkNav = false;
+            document.documentElement.classList.remove("ink-transitioning"); // 恢复墨韵混合
             (window as any).__inkResume?.();
           });
         }, SETTLE_MS);

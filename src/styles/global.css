@@ -411,9 +411,13 @@ p {
   background: linear-gradient(180deg, #2a2825 0%, #1d1b19 100%);
   transform: translateY(100%);
   will-change: transform;
-  /* 故意不做到完全不透明（1%）：避免浏览器对被盖住的新页面做"遮挡剔除"而不栅格化，
-     否则揭幕露出第一条缝时才首次绘制 → 卡一下。0.99 视觉上与全黑无异。 */
-  opacity: 0.99;
+}
+
+/* 根因修复：过渡期间关闭全屏 mix-blend-mode（混合层会迫使合成器每帧回读像素重绘，
+   是揭幕卡顿的真凶）。过渡结束后由 JS 移除该类，恢复墨韵混合。 */
+html.ink-transitioning #webgl-container,
+html.ink-transitioning .scroll-painting-container {
+  mix-blend-mode: normal !important;
 }
 
 /* 昼夜切换印章按钮 */
