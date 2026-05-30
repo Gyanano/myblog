@@ -69,6 +69,12 @@ html.theme-anim *::after {
   }
 }
 
+/* 永久预留滚动条槽位：滚动条出现/消失（换页、Lenis 停启、页面高度变化）都不再
+   改变内容宽度，从根上消除"滚动条重现 → 整页重排"导致的揭幕卡顿。 */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Lenis 平滑滚动推荐样式（由 JS 加上 .lenis 类时生效） */
 html.lenis,
 html.lenis body {
