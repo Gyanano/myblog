@@ -90,12 +90,13 @@
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         window.setTimeout(() => {
-          void document.body.offsetHeight; // 强制刷新布局，避免残留重排撞上揭幕首帧
           animTo("0%", "-100%", REVEAL_MS).then(() => {
             if (t) t.style.transform = "translateY(100%)";
             (window as any).__inkNav = false;
-            document.documentElement.classList.remove("ink-transitioning"); // 恢复墨韵混合 + 释放内容层
+            document.documentElement.classList.remove("ink-transitioning"); // 恢复墨韵混合
             (window as any).__inkResume?.();
+            // 揭幕已结束：此刻才做 ScrollTrigger 绑定/refresh/lenis.resize（空闲时段）
+            (window as any).__afterInkReveal?.();
           });
         }, SETTLE_MS);
       });

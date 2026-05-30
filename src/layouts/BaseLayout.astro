@@ -117,35 +117,47 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
           return;
         }
 
-        // 过场：先把一切定为终态（视口内/近视口的内容绝不会在揭幕时动）
+        // 过场：盖住期间只把内容定为终态，绝不碰布局（不建 ScrollTrigger、不 refresh）。
         if (titles.length) gsap.set(titles, { opacity: 1, y: 0 });
         if (fades.length) gsap.set(fades, { opacity: 1, y: 0 });
         groups.forEach((g) => {
           if (g.children.length) gsap.set(g.children, { opacity: 1, y: 0 });
         });
-        // 仅对完全在视口下方的元素重新隐藏 + 绑定滚动入场（揭幕时它们不可见）
-        titles.forEach((t) => {
-          if (belowFold(t))
-            gsap.from(t, {
-              opacity: 0,
-              y: 40,
-              duration: 0.9,
-              ease: "power3.out",
-              scrollTrigger: { trigger: t, start: "top 85%" },
+        // 把"视口下方元素的滚动入场绑定 + lenis.resize + ScrollTrigger.refresh"全部推迟到
+        // 揭幕动画结束后的空闲时段，避免同步重排/刷新落在揭幕首帧上（揭幕卡顿真凶）。
+        (window as any).__afterInkReveal = () => {
+          const run = () => {
+            if (lenis) lenis.resize();
+            titles.forEach((t) => {
+              if (belowFold(t))
+                gsap.from(t, {
+                  opacity: 0,
+                  y: 40,
+                  duration: 0.9,
+                  ease: "power3.out",
+                  scrollTrigger: { trigger: t, start: "top 85%" },
+                });
             });
-        });
-        groups.forEach((g) => {
-          if (g.children.length && belowFold(g))
-            gsap.from(g.children, {
-              opacity: 0,
-              y: 30,
-              duration: 0.8,
-              stagger: 0.1,
-              ease: "power2.out",
-              scrollTrigger: { trigger: g, start: "top 82%" },
+            groups.forEach((g) => {
+              if (g.children.length && belowFold(g))
+                gsap.from(g.children, {
+                  opacity: 0,
+                  y: 30,
+                  duration: 0.8,
+                  stagger: 0.1,
+                  ease: "power2.out",
+                  scrollTrigger: { trigger: g, start: "top 82%" },
+                });
             });
-        });
-        ScrollTrigger.refresh();
+            ScrollTrigger.refresh();
+            delete (window as any).__afterInkReveal;
+          };
+          if ("requestIdleCallback" in window) {
+            (window as any).requestIdleCallback(run, { timeout: 800 });
+          } else {
+            window.setTimeout(run, 180);
+          }
+        };
       }
 
       function cleanupReveal() {
@@ -154,12 +166,13 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
 
       function onPageLoad() {
         initLenis();
+        const isNav = !!(window as any).__inkNav;
         if (lenis) {
           lenis.scrollTo(0, { immediate: true });
-          lenis.resize();
+          if (!isNav) lenis.resize(); // 过场时 resize 推迟到揭幕后（见 __afterInkReveal）
         }
         // __inkNav 为真表示这是一次过场导航（蒙版正盖住），把工作做在蒙版下
-        buildReveal(!!(window as any).__inkNav);
+        buildReveal(isNav);
       }
 
       document.addEventListener("astro:page-load", onPageLoad);
