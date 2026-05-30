@@ -1,5 +1,6 @@
 ---
-// 昼夜（宣纸/墨夜）切换印章。切换时以水墨过场盖墨→换主题→揭墨。
+// 昼夜（宣纸/墨夜）切换印章。不使用全屏遮罩——主题只是改 CSS 颜色变量，
+// 切换时临时给一组颜色属性加 0.45s 过渡，颜色就地平滑渐变，最轻最干净。
 ---
 
 <button id="theme-toggle" class="seal-btn" type="button" aria-label="切换昼夜" title="昼夜" data-cursor>
@@ -14,6 +15,8 @@
     } catch {}
   }
 
+  let themeTimer = 0;
+
   function initThemeToggle() {
     const btn = document.getElementById("theme-toggle");
     if (!btn || btn.dataset.bound === "1") return;
@@ -22,26 +25,11 @@
       e.stopPropagation();
       const cur = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
       const next = cur === "dark" ? "light" : "dark";
-      const t = document.getElementById("ink-transition");
-      if (!t) {
-        applyTheme(next);
-        return;
-      }
-      t.animate([{ transform: "translateY(100%)" }, { transform: "translateY(0%)" }], {
-        duration: 300,
-        easing: "cubic-bezier(.6,0,.2,1)",
-        fill: "forwards",
-      }).finished.then(() => {
-        applyTheme(next);
-        const out = t.animate(
-          [{ transform: "translateY(0%)" }, { transform: "translateY(-100%)" }],
-          { duration: 360, easing: "cubic-bezier(.6,0,.2,1)", fill: "forwards" },
-        );
-        const reset = () => {
-          t.style.transform = "translateY(100%)";
-        };
-        out.finished.then(reset).catch(reset);
-      });
+      const root = document.documentElement;
+      root.classList.add("theme-anim");
+      applyTheme(next);
+      window.clearTimeout(themeTimer);
+      themeTimer = window.setTimeout(() => root.classList.remove("theme-anim"), 520);
     });
   }
   document.addEventListener("astro:page-load", initThemeToggle);

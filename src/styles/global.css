@@ -27,7 +27,18 @@
   --cinnabar: #d2554e;
 }
 
-/* 主题切换在水墨遮罩盖住时瞬间完成（不做颜色 morph），揭幕即最终配色，干脆利落 */
+/* 主题切换：临时给颜色属性加过渡（class 用完即移除，不留常驻开销），就地平滑渐变 */
+html.theme-anim,
+html.theme-anim *,
+html.theme-anim *::before,
+html.theme-anim *::after {
+  transition:
+    background-color 0.45s ease,
+    color 0.45s ease,
+    border-color 0.45s ease,
+    box-shadow 0.45s ease,
+    fill 0.45s ease !important;
+}
 
 /* 夜间：墨场与长卷改用 screen 混合，浅墨显于暗底 */
 :root[data-theme="dark"] #webgl-container {
