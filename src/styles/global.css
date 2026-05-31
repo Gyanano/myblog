@@ -601,13 +601,14 @@ html.ink-transitioning main {
   top: 50%;
   left: calc(50% + 420px);
   transform: translateY(-50%);
-  width: 200px;
-  max-height: 72vh;
+  width: 220px;
+  max-height: 74vh;
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 40;
   font-family: var(--font-mono);
   font-size: 0.8rem;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 .toc-title {
   color: var(--ink-light);
@@ -617,28 +618,47 @@ html.ink-transitioning main {
 }
 .toc ul {
   list-style: none;
+  display: block;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+.toc li {
+  display: list-item;
 }
 .toc-item {
-  margin: 0.1rem 0;
+  margin: 0.15rem 0;
 }
 .toc-d3 a {
-  padding-left: 1.5rem;
+  padding-left: 1.6rem;
   font-size: 0.76rem;
+  opacity: 0.85;
 }
 .toc a {
   display: block;
+  width: 100%;
+  box-sizing: border-box;
   color: var(--ink-light);
   text-decoration: none;
-  padding: 0.18rem 0 0.18rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  padding: 0.2rem 0 0.2rem 0.75rem;
   border-left: 2px solid var(--ink-wash);
+  border-radius: 0;
+  background: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
   transition: color 0.2s ease, border-color 0.2s ease;
 }
 .toc a:hover {
   color: var(--ink-base);
+  background: none;
   border-left-color: var(--ink-light);
 }
 .toc a.is-active {
   color: var(--cinnabar);
+  background: none;
   border-left-color: var(--cinnabar);
 }
 @media (max-width: 1279px) {

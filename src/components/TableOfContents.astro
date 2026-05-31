@@ -9,7 +9,7 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 ---
 
 {toc.length > 0 && (
-  <nav id="toc" class="toc" aria-label="目录">
+  <aside id="toc" class="toc" aria-label="目录">
     <div class="toc-title">目录</div>
     <ul>
       {toc.map((h) => (
@@ -18,7 +18,7 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
         </li>
       ))}
     </ul>
-  </nav>
+  </aside>
 )}
 
 <script>
