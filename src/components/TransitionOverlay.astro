@@ -108,6 +108,10 @@
       return;
     }
     pendingReveal = false;
+    // 关键：ClientRouter 的 swap 会清空 <html> 的 class，盖墨时加的 ink-transitioning
+    // 在换页后丢失，导致揭幕滑动期间「关混合层 + 提升 main 图层」的优化全部失效，
+    // InkCanvas/山水图的 mix-blend 每帧回读重绘 → 揭幕闪屏。换页后重新挂上，揭幕结束再移除。
+    document.documentElement.classList.add("ink-transitioning");
     // 双 rAF 先逼浏览器把新页面绘制出一帧（含布局/栅格化），再短暂稳定，最后揭幕。
     // 这样新内容的首帧绘制不会与揭幕动画撞在一起，揭幕全程只剩合成层位移。
     requestAnimationFrame(() => {
