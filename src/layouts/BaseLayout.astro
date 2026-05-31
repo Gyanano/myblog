@@ -35,12 +35,21 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <script is:inline>
-      // 无闪烁应用昼夜主题（在首帧前）
+      // 无闪烁应用昼夜主题（在首帧前），并在 View Transitions 换页后重新应用。
+      // ClientRouter 的 swap 会清空 <html> 属性并用服务端渲染的新页面覆盖，
+      // 从而抹掉 JS 设置的 data-theme；若不在 after-swap 重新套用，导航会丢主题，
+      // 而 localStorage 仍保留旧值，刷新时又被读回——显示态与持久态脱节。
       (function () {
-        try {
-          if (localStorage.getItem("theme") === "dark")
-            document.documentElement.setAttribute("data-theme", "dark");
-        } catch (e) {}
+        function applyTheme() {
+          try {
+            if (localStorage.getItem("theme") === "dark")
+              document.documentElement.setAttribute("data-theme", "dark");
+            else document.documentElement.removeAttribute("data-theme");
+          } catch (e) {}
+        }
+        applyTheme();
+        // document 上的监听跨 swap 保留，注册一次即可
+        document.addEventListener("astro:after-swap", applyTheme);
       })();
     </script>
     <script is:inline>
