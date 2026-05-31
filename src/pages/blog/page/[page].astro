@@ -1,0 +1,42 @@
+---
+import { getPublishedPosts, PAGE_SIZE, totalPages } from "../../../lib/blog";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PostCard from "../../../components/PostCard.astro";
+import TagBar from "../../../components/TagBar.astro";
+import Pager from "../../../components/Pager.astro";
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  const total = totalPages(posts.length);
+  const paths = [];
+  // 第 1 页由 /blog 承担，这里只生成第 2 页起
+  for (let p = 2; p <= total; p++) {
+    paths.push({ params: { page: String(p) }, props: { page: p } });
+  }
+  return paths;
+}
+
+const { page } = Astro.props as { page: number };
+const posts = await getPublishedPosts();
+const total = totalPages(posts.length);
+const pagePosts = posts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+---
+
+<BaseLayout title={`墨痕 · 第 ${page} 页`} description="文章与笔记">
+  <section id="blog">
+    <h2 class="gs-title">墨痕 / 文章</h2>
+    <TagBar posts={posts} />
+    <div class="gs-stagger">
+      {pagePosts.map((p) => (
+        <PostCard
+          href={`/blog/${p.id}`}
+          title={p.data.title}
+          date={p.data.date}
+          description={p.data.description}
+          tags={p.data.tags}
+        />
+      ))}
+    </div>
+    <Pager current={page} total={total} />
+  </section>
+</BaseLayout>

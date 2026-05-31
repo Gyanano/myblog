@@ -1,21 +1,24 @@
 ---
-import { getCollection } from "astro:content";
+import { getPublishedPosts, PAGE_SIZE, totalPages } from "../../lib/blog";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PostCard from "../../components/PostCard.astro";
+import TagBar from "../../components/TagBar.astro";
+import Pager from "../../components/Pager.astro";
 
-const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
-);
+const posts = await getPublishedPosts();
+const pagePosts = posts.slice(0, PAGE_SIZE);
+const total = totalPages(posts.length);
 ---
 
 <BaseLayout title="墨痕" description="文章与笔记">
   <section id="blog">
     <h2 class="gs-title">墨痕 / 文章</h2>
+    <TagBar posts={posts} />
     <div class="gs-stagger">
-      {posts.length === 0 ? (
+      {pagePosts.length === 0 ? (
         <p style="color:var(--ink-light)">尚未落笔。</p>
       ) : (
-        posts.map((p) => (
+        pagePosts.map((p) => (
           <PostCard
             href={`/blog/${p.id}`}
             title={p.data.title}
@@ -26,5 +29,6 @@ const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
         ))
       )}
     </div>
+    <Pager current={1} total={total} />
   </section>
 </BaseLayout>

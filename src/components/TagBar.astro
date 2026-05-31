@@ -1,0 +1,24 @@
+---
+import { collectTags, type Post } from "../lib/blog";
+interface Props {
+  posts: Post[]; // 传全部已发布文章，保证各页标签栏一致
+  active?: string;
+}
+const { posts, active } = Astro.props;
+const tags = collectTags(posts);
+---
+
+<nav class="tag-bar" aria-label="文章分类">
+  <a class:list={["tag-chip", { "is-active": !active }]} href="/blog" data-cursor>
+    全部 <span class="tag-count">{posts.length}</span>
+  </a>
+  {tags.map(({ tag, count }) => (
+    <a
+      class:list={["tag-chip", { "is-active": active === tag }]}
+      href={`/blog/tags/${encodeURIComponent(tag)}`}
+      data-cursor
+    >
+      #{tag} <span class="tag-count">{count}</span>
+    </a>
+  ))}
+</nav>
