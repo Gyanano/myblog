@@ -1,0 +1,67 @@
+---
+// 返回顶部悬浮印章：水墨毛刷向上箭头（turbulence 位移做出墨笔糙边）。
+// 页面离开最顶部时淡入；点击经 Lenis 平滑回顶并在按钮处溅墨。跨页持久。
+---
+
+<button
+  id="back-to-top"
+  class="back-to-top"
+  type="button"
+  aria-label="返回顶部"
+  title="返回顶部"
+  data-cursor
+  transition:persist="back-to-top"
+>
+  <svg viewBox="0 0 48 48" aria-hidden="true" class="btt-arrow">
+    <defs>
+      <filter id="btt-ink" x="-30%" y="-30%" width="160%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="n"></feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="1.8"></feDisplacementMap>
+      </filter>
+    </defs>
+    <g filter="url(#btt-ink)" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M24 39 L24 13" stroke-width="5"></path>
+      <path d="M12.5 24.5 L24 11.5 L35.5 24.5" stroke-width="4.5"></path>
+    </g>
+  </svg>
+</button>
+
+<script>
+  function initBackToTop() {
+    const btn = document.getElementById("back-to-top");
+    if (!btn) return;
+    const SHOW_AT = 320; // 离顶超过该距离才出现
+
+    function sync() {
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      btn!.classList.toggle("is-visible", y > SHOW_AT);
+    }
+
+    // 持久元素：滚动监听只挂一次（跨页不重复绑定），点击每次重新确认绑定
+    if (!(window as any).__backToTopScroll) {
+      (window as any).__backToTopScroll = true;
+      window.addEventListener("scroll", sync, { passive: true });
+    }
+
+    if (btn.dataset.bound !== "1") {
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const r = btn!.getBoundingClientRect();
+        (window as any).__inkSplash?.(r.left + r.width / 2, r.top + r.height / 2, 90, 0.6);
+        const lenis = (window as any).__lenis;
+        if (lenis) lenis.scrollTo(0, { duration: 1.1 });
+        else window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+
+    sync();
+  }
+
+  document.addEventListener("astro:page-load", initBackToTop);
+  // 揭幕后页面可能已不在顶部，复位可见态
+  document.addEventListener("astro:after-swap", () => {
+    const btn = document.getElementById("back-to-top");
+    if (btn) btn.classList.remove("is-visible");
+  });
+</script>

@@ -1,0 +1,157 @@
+---
+// 文章搜索：构建期 /search-index.json 索引 + 客户端过滤。
+// 命中标题/摘要/标签/正文；有查询时隐藏分页列表与标签栏并展示结果，清空恢复。
+---
+
+<div class="search-box">
+  <input
+    id="search-input"
+    type="search"
+    placeholder="搜索文章 / 标签 / 正文…"
+    autocomplete="off"
+    aria-label="搜索文章"
+    data-cursor
+  />
+  <span class="search-ink" aria-hidden="true"></span>
+</div>
+<div id="search-results" class="search-results" hidden></div>
+
+<script>
+  interface Item {
+    title: string;
+    description: string;
+    tags: string[];
+    date: string;
+    slug: string;
+    body: string;
+  }
+
+  let index: Item[] | null = null;
+  let loading: Promise<Item[]> | null = null;
+
+  function loadIndex(): Promise<Item[]> {
+    if (index) return Promise.resolve(index);
+    if (loading) return loading;
+    loading = fetch("/search-index.json")
+      .then((r) => r.json())
+      .then((data: Item[]) => {
+        index = data;
+        return data;
+      })
+      .catch(() => {
+        index = [];
+        return [];
+      });
+    return loading;
+  }
+
+  function esc(s: string) {
+    return s.replace(/[&<>"]/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] || c,
+    );
+  }
+
+  // 命中正文时取一段上下文片段
+  function snippet(body: string, tokens: string[]): string {
+    const lower = body.toLowerCase();
+    let at = -1;
+    for (const t of tokens) {
+      const i = lower.indexOf(t);
+      if (i >= 0 && (at < 0 || i < at)) at = i;
+    }
+    if (at < 0) return "";
+    const start = Math.max(0, at - 24);
+    const end = Math.min(body.length, at + 56);
+    return (start > 0 ? "…" : "") + body.slice(start, end).trim() + (end < body.length ? "…" : "");
+  }
+
+  function score(it: Item, tokens: string[]): number {
+    let s = 0;
+    const title = it.title.toLowerCase();
+    const desc = it.description.toLowerCase();
+    const tags = it.tags.join(" ").toLowerCase();
+    const body = it.body.toLowerCase();
+    for (const t of tokens) {
+      if (!t) continue;
+      if (title.includes(t)) s += 10;
+      else if (tags.includes(t)) s += 6;
+      else if (desc.includes(t)) s += 4;
+      else if (body.includes(t)) s += 2;
+      else return -1; // 该词无任何命中 → 整体淘汰（AND 语义）
+    }
+    return s;
+  }
+
+  function render(results: { it: Item; tokens: string[] }[]) {
+    const box = document.getElementById("search-results");
+    if (!box) return;
+    if (results.length === 0) {
+      box.innerHTML = `<p class="search-empty">无匹配文章。</p>`;
+      return;
+    }
+    box.innerHTML = results
+      .map(({ it, tokens }) => {
+        const snip = snippet(it.body, tokens);
+        const inMeta =
+          tokens.some((t) => it.title.toLowerCase().includes(t)) ||
+          tokens.some((t) => it.description.toLowerCase().includes(t));
+        return `<a href="/blog/${it.slug}" class="post-card ink-hover" data-cursor data-seal="阅" style="display:block;text-decoration:none;color:inherit;padding:2rem 0;border-bottom:1px dashed var(--ink-wash)">
+  <div style="font-family:var(--font-mono);color:var(--ink-light);font-size:0.85rem">${it.date}</div>
+  <h3 style="font-family:var(--font-calligraphy);font-size:2rem;margin:0.4rem 0;color:var(--ink-dark)">${esc(it.title)}</h3>
+  <p style="color:var(--ink-base);margin-bottom:0.6rem">${esc(it.description)}</p>
+  ${snip && !inMeta ? `<p class="search-snippet">${esc(snip)}</p>` : ""}
+  <div style="font-family:var(--font-mono);font-size:0.8rem;color:var(--ink-light)">${it.tags.map((t) => "#" + esc(t)).join("  ")}</div>
+</a>`;
+      })
+      .join("");
+  }
+
+  function setBrowseHidden(hidden: boolean) {
+    const sec = document.getElementById("blog");
+    if (!sec) return;
+    sec.querySelectorAll<HTMLElement>(".tag-bar, .gs-stagger, .pager").forEach((el) => {
+      el.style.display = hidden ? "none" : "";
+    });
+  }
+
+  function initSearch() {
+    const input = document.getElementById("search-input") as HTMLInputElement | null;
+    const box = document.getElementById("search-results");
+    if (!input || !box) return;
+    if (input.dataset.bound === "1") return;
+    input.dataset.bound = "1";
+
+    let timer: number | undefined;
+
+    function run() {
+      const q = input!.value.trim().toLowerCase();
+      if (!q) {
+        box!.hidden = true;
+        box!.innerHTML = "";
+        setBrowseHidden(false);
+        return;
+      }
+      const tokens = q.split(/\s+/).filter(Boolean);
+      loadIndex().then((data) => {
+        // 防抖期间内容可能已变化
+        if (input!.value.trim().toLowerCase() !== q) return;
+        const scored = data
+          .map((it) => ({ it, tokens, s: score(it, tokens) }))
+          .filter((r) => r.s >= 0)
+          .sort((a, b) => b.s - a.s || (a.it.date < b.it.date ? 1 : -1));
+        setBrowseHidden(true);
+        box!.hidden = false;
+        render(scored);
+      });
+    }
+
+    input.addEventListener("input", () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(run, 140);
+    });
+    // 预热索引：聚焦即开始拉取
+    input.addEventListener("focus", () => loadIndex(), { once: true });
+  }
+
+  document.addEventListener("astro:page-load", initSearch);
+</script>
