@@ -610,15 +610,36 @@ html.ink-transitioning main {
   margin-bottom: 1.4rem;
 }
 
+/* 项目预览图（截图 / Logo），灰度入墨、hover 复原本色 */
+.project-shot {
+  margin-bottom: 1.2rem;
+}
+.project-shot img {
+  max-width: min(100%, 420px);
+  max-height: 240px;
+  border-radius: 8px;
+  border: 1px solid var(--ink-wash);
+  box-shadow: 0 3px 14px rgba(42, 40, 37, 0.12);
+  filter: grayscale(0.85) contrast(1.02);
+  opacity: 0.95;
+  transition: filter 0.45s ease, opacity 0.45s ease;
+  display: block;
+}
+.ink-hover:hover .project-shot img {
+  filter: grayscale(0);
+  opacity: 1;
+}
+
 /* 卡片墨染悬停：墨色晕开 + 浮现朱砂小印 */
 .ink-hover {
   position: relative;
-  transition: background 0.45s ease, padding-left 0.35s ease;
+  /* 用 transform 做右移微动：合成层处理、不触发 reflow，避免文字重排与下方内容跳动 */
+  transition: background 0.45s ease, transform 0.35s ease;
   border-radius: 6px;
 }
 .ink-hover:hover {
   background: radial-gradient(130% 120% at 0% 40%, var(--ink-wash) 0%, transparent 70%);
-  padding-left: 0.85rem;
+  transform: translateX(0.6rem);
 }
 .ink-hover::after {
   content: attr(data-seal);

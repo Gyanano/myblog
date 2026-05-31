@@ -11,6 +11,11 @@ const { project } = Astro.props;
   data-seal="技"
   style="margin-bottom:2.5rem;padding-bottom:2.5rem;border-bottom:1px dashed var(--ink-wash)"
 >
+  {project.image && (
+    <div class="project-shot">
+      <img src={project.image} alt={`${project.title} 预览`} loading="lazy" />
+    </div>
+  )}
   <div style="font-family:var(--font-mono);color:var(--ink-light);font-size:0.9rem">
     &gt; {project.boot}<br />
     &gt; loading modules: [{project.stack.join(", ")}]<br />
