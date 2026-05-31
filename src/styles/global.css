@@ -831,12 +831,33 @@ html.ink-transitioning main {
   padding: 1.5rem 0;
 }
 
-/* 文章分类标签栏 */
+/* 文章分类标签栏（按「技术 / 玄学」分组） */
 .tag-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin: 0 0 2.8rem;
+}
+.tag-group {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.7rem;
+}
+.tag-group-label {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  color: var(--ink-light);
+  border-left: 2px solid var(--cinnabar);
+  padding-left: 0.55rem;
+}
+.tag-group-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
-  margin: 0 0 2.8rem;
 }
 .tag-chip {
   font-family: var(--font-mono);
@@ -916,10 +937,48 @@ html.ink-transitioning main {
   padding: 0.1rem 0.45rem;
   vertical-align: middle;
 }
+.series-card.has-cover {
+  display: flex;
+  gap: 1.4rem;
+  align-items: flex-start;
+}
+.series-card-main {
+  flex: 1;
+  min-width: 0;
+}
+.series-cover {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--ink-wash);
+  box-shadow: 0 3px 12px rgba(42, 40, 37, 0.12);
+}
+.series-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.05);
+  opacity: 0.92;
+  transition: filter 0.4s ease, opacity 0.4s ease, transform 0.5s ease;
+}
+.series-card.has-cover:hover .series-cover img {
+  filter: grayscale(0.15);
+  opacity: 1;
+  transform: scale(1.05);
+}
+@media (max-width: 600px) {
+  .series-cover {
+    width: 64px;
+    height: 64px;
+  }
+}
 .series-meta {
   display: flex;
   align-items: center;
   gap: 0.8rem;
+  flex-wrap: wrap;
 }
 .series-toc-preview {
   display: flex;
@@ -1009,6 +1068,22 @@ html.ink-transitioning main {
   color: var(--cinnabar);
   text-decoration: none;
   font-size: 0.95rem;
+}
+.series-head-row {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+.series-cover-lg {
+  width: 120px;
+  height: 120px;
+  margin-top: 0.6rem;
+}
+@media (max-width: 600px) {
+  .series-cover-lg {
+    width: 80px;
+    height: 80px;
+  }
 }
 .series-head-desc {
   color: var(--ink-base);

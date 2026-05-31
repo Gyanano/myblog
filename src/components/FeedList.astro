@@ -20,6 +20,7 @@ const { items } = Astro.props;
           count={it.series.count}
           latest={it.series.latest}
           description={it.series.description}
+          cover={it.series.cover}
           titles={it.series.posts.slice(0, 3).map((p) => p.data.title)}
         />
       ) : (

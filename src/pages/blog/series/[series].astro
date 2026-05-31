@@ -22,9 +22,18 @@ const updated = series.latest.toISOString().slice(0, 10);
       <a href="/blog" class="series-back" data-cursor>← 墨痕</a>
       <span class="series-badge">系列合集</span>
     </div>
-    <h2 class="gs-title" style="margin-top:0.6rem">{series.name}</h2>
-    <p class="series-head-desc">{series.description}</p>
-    <p class="series-head-meta">共 {series.count} 篇 · 更新于 {updated}</p>
+    <div class="series-head-row">
+      {series.cover && (
+        <div class="series-cover series-cover-lg" aria-hidden="true">
+          <img src={series.cover} alt="" />
+        </div>
+      )}
+      <div>
+        <h2 class="gs-title" style="margin-top:0.6rem">{series.name}</h2>
+        <p class="series-head-desc">{series.description}</p>
+        <p class="series-head-meta">共 {series.count} 篇 · 更新于 {updated}</p>
+      </div>
+    </div>
     <div class="gs-stagger">
       {series.posts.map((p, i) => (
         <div class="series-item">

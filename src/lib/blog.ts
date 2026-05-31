@@ -23,12 +23,43 @@ export function totalPages(count: number): number {
   return Math.max(1, Math.ceil(count / PAGE_SIZE));
 }
 
+// ---------------- 标签分组 ----------------
+
+// 显式归入「玄学」的标签；其余一律落入默认组「技术」（新增技术标签自动归类）。
+const TAG_GROUP_OF: Record<string, string> = {
+  奇门遁甲: "玄学",
+  玄学: "玄学",
+};
+const DEFAULT_TAG_GROUP = "技术";
+const TAG_GROUP_ORDER = ["技术", "玄学"]; // 渲染顺序
+
+export interface TagGroup {
+  label: string;
+  items: { tag: string; count: number }[];
+}
+
+/** 把标签按「技术 / 玄学」分组，组内沿用按文章数倒序，空组省略。 */
+export function groupTags(posts: Post[]): TagGroup[] {
+  const tags = collectTags(posts); // 已按数量倒序
+  const buckets = new Map<string, { tag: string; count: number }[]>();
+  for (const t of tags) {
+    const g = TAG_GROUP_OF[t.tag] ?? DEFAULT_TAG_GROUP;
+    (buckets.get(g) ?? buckets.set(g, []).get(g)!).push(t);
+  }
+  const ordered = [...TAG_GROUP_ORDER];
+  for (const g of buckets.keys()) if (!ordered.includes(g)) ordered.push(g);
+  return ordered
+    .filter((g) => buckets.has(g))
+    .map((label) => ({ label, items: buckets.get(label)! }));
+}
+
 // ---------------- 系列合集 ----------------
 
-/** 各系列的展示信息（描述等可在此登记，缺省回退到通用文案）。 */
-export const SERIES_META: Record<string, { description: string }> = {
+/** 各系列的展示信息（描述/封面可在此登记，缺省回退到通用文案）。 */
+export const SERIES_META: Record<string, { description: string; cover?: string }> = {
   奇门遁甲基础: {
     description: "从「何谓奇门」到「吉格凶格」，时家奇门转盘法的入门系列笔记，按章节循序渐进。",
+    cover: "/blog/bagua-jiugong/1.png",
   },
 };
 
@@ -38,6 +69,7 @@ export interface SeriesInfo {
   latest: Date; // 系列内最新文章日期，用于在时间流中定位
   count: number;
   description: string;
+  cover?: string;
 }
 
 /** 系列名 → 系列信息。 */
@@ -58,6 +90,7 @@ export function getSeriesMap(posts: Post[]): Map<string, SeriesInfo> {
       latest,
       count: arr.length,
       description: SERIES_META[name]?.description ?? `「${name}」系列，共 ${arr.length} 篇。`,
+      cover: SERIES_META[name]?.cover,
     });
   }
   return result;
