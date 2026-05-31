@@ -1,0 +1,45 @@
+---
+import { getPublishedPosts, getSeriesMap, type SeriesInfo } from "../../../lib/blog";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PostCard from "../../../components/PostCard.astro";
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  const seriesMap = getSeriesMap(posts);
+  return [...seriesMap.values()].map((s) => ({
+    params: { series: s.name },
+    props: { series: s },
+  }));
+}
+
+const { series } = Astro.props as { series: SeriesInfo };
+const updated = series.latest.toISOString().slice(0, 10);
+---
+
+<BaseLayout title={`系列 · ${series.name}`} description={series.description}>
+  <section id="blog">
+    <div class="series-head">
+      <a href="/blog" class="series-back" data-cursor>← 墨痕</a>
+      <span class="series-badge">系列合集</span>
+    </div>
+    <h2 class="gs-title" style="margin-top:0.6rem">{series.name}</h2>
+    <p class="series-head-desc">{series.description}</p>
+    <p class="series-head-meta">共 {series.count} 篇 · 更新于 {updated}</p>
+    <div class="gs-stagger">
+      {series.posts.map((p, i) => (
+        <div class="series-item">
+          <span class="series-item-no">{String(i + 1).padStart(2, "0")}</span>
+          <div class="series-item-body">
+            <PostCard
+              href={`/blog/${p.id}`}
+              title={p.data.title}
+              date={p.data.date}
+              description={p.data.description}
+              tags={p.data.tags}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

@@ -9,6 +9,9 @@ const blog = defineCollection({
     description: z.string(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
+    // 系列合集：同名 series 的文章在列表里折叠成一张系列卡；order 决定系列内顺序
+    series: z.string().optional(),
+    order: z.number().optional(),
   }),
 });
 

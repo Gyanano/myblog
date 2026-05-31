@@ -4,6 +4,8 @@ date: 2026-05-24
 description: "乾坤震巽坎离艮兑八卦的详尽类象（人物/方位/五行/人体/物象），及其在洛书九宫中的分布。"
 tags: ["奇门遁甲", "玄学"]
 draft: false
+series: "奇门遁甲基础"
+order: 7
 ---
 
 ![八卦与九宫·图1](/blog/bagua-jiugong/1.png)

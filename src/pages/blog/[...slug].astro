@@ -3,6 +3,8 @@ import { getCollection, render } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import ReadingProgress from "../../components/ReadingProgress.astro";
 import TableOfContents from "../../components/TableOfContents.astro";
+import SeriesNav from "../../components/SeriesNav.astro";
+import { getPublishedPosts, getSeriesNav } from "../../lib/blog";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
@@ -12,6 +14,7 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
 const d = post.data.date.toISOString().slice(0, 10);
+const seriesNav = getSeriesNav(await getPublishedPosts(), post);
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description}>
@@ -23,9 +26,27 @@ const d = post.data.date.toISOString().slice(0, 10);
     <div style="font-family:var(--font-mono);font-size:0.8rem;color:var(--ink-light);margin-bottom:2.5rem">
       {post.data.tags.map((t) => `#${t}`).join("  ")}
     </div>
+    {seriesNav && (
+      <SeriesNav
+        name={seriesNav.name}
+        index={seriesNav.index}
+        count={seriesNav.count}
+        prev={seriesNav.prev}
+        next={seriesNav.next}
+      />
+    )}
     <div class="prose">
       <Content />
     </div>
+    {seriesNav && (
+      <SeriesNav
+        name={seriesNav.name}
+        index={seriesNav.index}
+        count={seriesNav.count}
+        prev={seriesNav.prev}
+        next={seriesNav.next}
+      />
+    )}
     <p style="margin-top:3rem">
       <a href="/blog" data-cursor style="color:var(--cinnabar);text-decoration:none">← 返回墨痕</a>
     </p>

@@ -1,0 +1,39 @@
+---
+// 文章页系列导航：显示「系列 · 名称 第 N/总 篇」及上一篇 / 下一篇。
+import type { Post } from "../lib/blog";
+interface Props {
+  name: string;
+  index: number; // 0-based
+  count: number;
+  prev: Post | null;
+  next: Post | null;
+}
+const { name, index, count, prev, next } = Astro.props;
+const seriesHref = `/blog/series/${encodeURIComponent(name)}`;
+---
+
+<nav class="series-nav" aria-label="系列导航">
+  <a class="series-nav-title" href={seriesHref} data-cursor>
+    <span class="series-badge">系列</span>
+    {name}
+    <span class="series-pos">{index + 1} / {count}</span>
+  </a>
+  <div class="series-nav-links">
+    {prev ? (
+      <a href={`/blog/${prev.id}`} class="series-nav-link prev" data-cursor>
+        <span class="dir">‹ 上一篇</span>
+        <span class="t">{prev.data.title}</span>
+      </a>
+    ) : (
+      <span class="series-nav-link is-disabled"><span class="dir">‹ 上一篇</span></span>
+    )}
+    {next ? (
+      <a href={`/blog/${next.id}`} class="series-nav-link next" data-cursor>
+        <span class="dir">下一篇 ›</span>
+        <span class="t">{next.data.title}</span>
+      </a>
+    ) : (
+      <span class="series-nav-link is-disabled"><span class="dir">下一篇 ›</span></span>
+    )}
+  </div>
+</nav>

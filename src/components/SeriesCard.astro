@@ -1,0 +1,36 @@
+---
+// 列表流里的系列合集卡：把同系列多篇折叠成一张，点击进入系列目录页。
+interface Props {
+  name: string;
+  count: number;
+  latest: Date;
+  description: string;
+  titles?: string[]; // 前几篇标题预览
+}
+const { name, count, latest, description, titles = [] } = Astro.props;
+const d = latest.toISOString().slice(0, 10);
+const href = `/blog/series/${encodeURIComponent(name)}`;
+---
+
+<a
+  href={href}
+  class="series-card ink-hover"
+  data-cursor
+  data-seal="集"
+  style="display:block;text-decoration:none;color:inherit;padding:2rem 0;border-bottom:1px dashed var(--ink-wash)"
+>
+  <div class="series-meta">
+    <span class="series-badge">系列合集</span>
+    <span style="font-family:var(--font-mono);color:var(--ink-light);font-size:0.85rem">共 {count} 篇 · 更新于 {d}</span>
+  </div>
+  <h3 style="font-family:var(--font-calligraphy);font-size:2rem;margin:0.4rem 0;color:var(--ink-dark)">
+    {name}
+  </h3>
+  <p style="color:var(--ink-base);margin-bottom:0.6rem">{description}</p>
+  {titles.length > 0 && (
+    <div class="series-toc-preview">
+      {titles.map((t, i) => <span>{`${i + 1}. ${t}`}</span>)}
+      {count > titles.length && <span class="series-more">…等 {count} 篇 →</span>}
+    </div>
+  )}
+</a>

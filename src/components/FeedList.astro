@@ -1,0 +1,36 @@
+---
+// 列表流渲染：post 项 → PostCard；series 项 → SeriesCard（折叠卡）。
+import type { FeedItem } from "../lib/blog";
+import PostCard from "./PostCard.astro";
+import SeriesCard from "./SeriesCard.astro";
+interface Props {
+  items: FeedItem[];
+}
+const { items } = Astro.props;
+---
+
+<div class="gs-stagger">
+  {items.length === 0 ? (
+    <p style="color:var(--ink-light)">尚未落笔。</p>
+  ) : (
+    items.map((it) =>
+      it.type === "series" ? (
+        <SeriesCard
+          name={it.series.name}
+          count={it.series.count}
+          latest={it.series.latest}
+          description={it.series.description}
+          titles={it.series.posts.slice(0, 3).map((p) => p.data.title)}
+        />
+      ) : (
+        <PostCard
+          href={`/blog/${it.post.id}`}
+          title={it.post.data.title}
+          date={it.post.data.date}
+          description={it.post.data.description}
+          tags={it.post.data.tags}
+        />
+      ),
+    )
+  )}
+</div>

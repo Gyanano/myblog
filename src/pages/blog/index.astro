@@ -1,14 +1,15 @@
 ---
-import { getPublishedPosts, PAGE_SIZE, totalPages } from "../../lib/blog";
+import { getPublishedPosts, getFeedItems, PAGE_SIZE, totalPages } from "../../lib/blog";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import PostCard from "../../components/PostCard.astro";
+import FeedList from "../../components/FeedList.astro";
 import TagBar from "../../components/TagBar.astro";
 import Pager from "../../components/Pager.astro";
 import Search from "../../components/Search.astro";
 
 const posts = await getPublishedPosts();
-const pagePosts = posts.slice(0, PAGE_SIZE);
-const total = totalPages(posts.length);
+const feed = getFeedItems(posts); // 系列折叠后的列表流
+const pageItems = feed.slice(0, PAGE_SIZE);
+const total = totalPages(feed.length);
 ---
 
 <BaseLayout title="墨痕" description="文章与笔记">
@@ -16,21 +17,7 @@ const total = totalPages(posts.length);
     <h2 class="gs-title">墨痕 / 文章</h2>
     <Search />
     <TagBar posts={posts} />
-    <div class="gs-stagger">
-      {pagePosts.length === 0 ? (
-        <p style="color:var(--ink-light)">尚未落笔。</p>
-      ) : (
-        pagePosts.map((p) => (
-          <PostCard
-            href={`/blog/${p.id}`}
-            title={p.data.title}
-            date={p.data.date}
-            description={p.data.description}
-            tags={p.data.tags}
-          />
-        ))
-      )}
-    </div>
+    <FeedList items={pageItems} />
     <Pager current={1} total={total} />
   </section>
 </BaseLayout>
