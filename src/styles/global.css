@@ -426,7 +426,8 @@ p {
 /* 根因修复：过渡期间关闭全屏 mix-blend-mode（混合层会迫使合成器每帧回读像素重绘，
    是揭幕卡顿的真凶）。过渡结束后由 JS 移除该类，恢复墨韵混合。 */
 html.ink-transitioning #webgl-container,
-html.ink-transitioning .scroll-painting-container {
+html.ink-transitioning .scroll-painting-container,
+html.ink-transitioning #ink-cursor {
   mix-blend-mode: normal !important;
 }
 /* 过渡期间把内容主体提升为独立 GPU 合成层：揭幕时遮罩滑走只需合成两张已栅格化的
