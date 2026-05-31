@@ -81,6 +81,6 @@ git push
 
 ## 小提示
 
-- **插图**：图片放进 `public/`（如 `public/img/foo.jpg`），正文用 `![说明](/img/foo.jpg)` 引用。
+- **插图**：每篇文章的图片单独放一个目录 `public/blog/<slug>/`（`<slug>` 与文件名一致），按出现顺序命名 `1.png`、`2.png`…，正文用绝对路径 `![说明](/blog/<slug>/1.png)` 引用；附件（如 PDF）同样放该目录并用 `[名称](/blog/<slug>/xxx.pdf)`。这样图片随文章聚拢、`public/` 根目录保持整洁。
 - **草稿**：`draft: true` 先存着，写完改成 `false` 再发布。
 - 想改每页篇数，调 `src/lib/blog.ts` 里的 `PAGE_SIZE`。
