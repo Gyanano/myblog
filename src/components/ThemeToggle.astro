@@ -68,9 +68,15 @@
       root.classList.add("theme-anim"); // 颜色过渡开启
       applyTheme(next); // 在蒙版下渐变
       await wait(HOLD_MS); // 等颜色渐变完成
+      // 渐变已完成：先撤掉通配过渡（揭幕期间不再让每个元素都跟踪 transition），
+      // 再用双 rAF 等本帧绘制落定——与页面切换揭幕同一套时序，避免揭幕首帧被
+      // 色彩重绘抢占导致“追帧瞬跳”，让揭幕全程只剩合成层位移。
+      root.classList.remove("theme-anim");
+      await new Promise<void>((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => r())),
+      );
       await animT("0%", "-100%", REVEAL_MS); // 揭幕露出新配色
       if (t) t.style.transform = "translateY(100%)";
-      root.classList.remove("theme-anim");
       root.classList.remove("ink-transitioning"); // 恢复墨韵混合
       (window as any).__inkResume?.();
       busy = false;
