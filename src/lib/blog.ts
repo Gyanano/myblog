@@ -59,7 +59,7 @@ export function groupTags(posts: Post[]): TagGroup[] {
 export const SERIES_META: Record<string, { description: string; cover?: string }> = {
   奇门遁甲基础: {
     description: "从「何谓奇门」到「吉格凶格」，时家奇门转盘法的入门系列笔记，按章节循序渐进。",
-    cover: "/blog/bagua-jiugong/1.png",
+    cover: "/blog/liuyi-jixing/1.png",
   },
 };
 
