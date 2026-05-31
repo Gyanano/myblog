@@ -5,7 +5,12 @@
 // 仅用 transform: translateY（合成层），开销低。
 ---
 
-<div id="ink-transition" aria-hidden="true" transition:persist="ink-transition"></div>
+<div id="ink-transition" aria-hidden="true" transition:persist="ink-transition">
+  <div class="ink-loader" aria-hidden="true">
+    <span class="ink-loader-dot"></span>
+    <span class="ink-loader-text">墨迹未干…</span>
+  </div>
+</div>
 
 <script>
   import { navigate } from "astro:transitions/client";
@@ -15,8 +20,11 @@
   const SETTLE_MS = 120; // 双 rAF 预绘制后再稳定一小段，然后揭幕
   const EASE = "cubic-bezier(.6,0,.2,1)";
 
+  const LOADER_DELAY = 350; // 盖满后超过该时长仍未落地，才显示“加载中”（快速跳转不闪现）
+
   let busy = false; // 正在过场
   let pendingReveal = false; // 落地后需要揭墨
+  let loaderTimer: number | undefined; // 延迟显示加载指示的计时器
 
   function el() {
     return document.getElementById("ink-transition");
@@ -80,6 +88,8 @@
       if (t) t.style.transform = "translateY(100%)";
       animTo("100%", "0%", COVER_MS).then(() => {
         pendingReveal = true;
+        // 慢加载才显示“加载中”；落地（astro:page-load）会清掉这个计时器
+        loaderTimer = window.setTimeout(() => t?.classList.add("is-loading"), LOADER_DELAY);
         navigate(dest);
       });
     },
@@ -88,8 +98,10 @@
 
   document.addEventListener("astro:page-load", () => {
     busy = false;
+    window.clearTimeout(loaderTimer); // 已落地，取消待显示的加载指示
     const t = el();
     if (!t) return;
+    t.classList.remove("is-loading"); // 揭幕前先隐藏加载指示，绝不与上滑动画并存
     if (!pendingReveal) {
       // 首次加载 / 前进后退：不揭墨，保持停在屏外
       t.style.transform = "translateY(100%)";

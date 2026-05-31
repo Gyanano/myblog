@@ -423,6 +423,49 @@ p {
   opacity: 0.999;
 }
 
+/* 加载指示：仅在盖满等待较久时浮现，揭幕前即隐藏（隐藏为瞬时，绝不与上滑并存） */
+.ink-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  opacity: 0;
+  pointer-events: none;
+}
+#ink-transition.is-loading .ink-loader {
+  opacity: 1;
+  transition: opacity 0.35s ease; /* 仅显示时有淡入；移除 is-loading 即瞬时归零 */
+}
+.ink-loader-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e9e3d6;
+}
+#ink-transition.is-loading .ink-loader-dot {
+  animation: ink-breathe 1.5s ease-in-out infinite;
+}
+.ink-loader-text {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  letter-spacing: 0.35em;
+  color: rgba(233, 227, 214, 0.72);
+}
+@keyframes ink-breathe {
+  0%,
+  100% {
+    transform: scale(0.7);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.95;
+  }
+}
+
 /* 根因修复：过渡期间关闭全屏 mix-blend-mode（混合层会迫使合成器每帧回读像素重绘，
    是揭幕卡顿的真凶）。过渡结束后由 JS 移除该类，恢复墨韵混合。 */
 html.ink-transitioning #webgl-container,
