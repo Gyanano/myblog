@@ -66,16 +66,18 @@ const featured = PROJECTS.slice(0, 2);
     </div>
   </section>
 
-  <!-- 精选 · 术 -->
-  <section id="home-work">
-    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1rem">
-      <h2 class="gs-title" style="margin-bottom:1rem">精选 · 术</h2>
-      <a href="/work" data-cursor style="color:var(--cinnabar);text-decoration:none;font-family:var(--font-mono);font-size:0.95rem;white-space:nowrap">更多项目 →</a>
-    </div>
-    <ul class="works-list gs-stagger" style="list-style:none">
-      {featured.map((p) => <ProjectCard project={p} />)}
-    </ul>
-  </section>
+  <!-- 精选 · 术（无项目时不显示） -->
+  {featured.length > 0 && (
+    <section id="home-work">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1rem">
+        <h2 class="gs-title" style="margin-bottom:1rem">精选 · 术</h2>
+        <a href="/work" data-cursor style="color:var(--cinnabar);text-decoration:none;font-family:var(--font-mono);font-size:0.95rem;white-space:nowrap">更多项目 →</a>
+      </div>
+      <ul class="works-list gs-stagger" style="list-style:none">
+        {featured.map((p) => <ProjectCard project={p} />)}
+      </ul>
+    </section>
+  )}
 
   <!-- 落款格言 -->
   <section id="home-seal" style="text-align:center">

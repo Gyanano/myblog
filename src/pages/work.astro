@@ -16,8 +16,14 @@ import { PROJECTS } from "../consts";
         设计的最高境界，是隐藏设计本身的痕迹。
       </span>
     </p>
-    <ul class="works-list gs-stagger">
-      {PROJECTS.map((p) => <ProjectCard project={p} />)}
-    </ul>
+    {PROJECTS.length === 0 ? (
+      <p class="gs-stagger" style="color:var(--ink-light);font-family:var(--font-mono)">
+        &gt; 项目整理中…
+      </p>
+    ) : (
+      <ul class="works-list gs-stagger">
+        {PROJECTS.map((p) => <ProjectCard project={p} />)}
+      </ul>
+    )}
   </section>
 </BaseLayout>
