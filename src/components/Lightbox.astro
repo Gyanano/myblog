@@ -1,0 +1,145 @@
+---
+// 图片灯箱：点击正文图片放大查看，支持滚轮/按钮缩放、拖动平移、双击复位、Esc 关闭。
+---
+
+<div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="图片查看">
+  <button class="lb-btn lb-close" type="button" aria-label="关闭" data-cursor>✕</button>
+  <div class="lb-stage">
+    <img id="lb-img" alt="" draggable="false" />
+  </div>
+  <div class="lb-toolbar">
+    <button class="lb-btn" data-lb="out" type="button" aria-label="缩小" data-cursor>−</button>
+    <button class="lb-btn" data-lb="reset" type="button" aria-label="复位" data-cursor>复位</button>
+    <button class="lb-btn" data-lb="in" type="button" aria-label="放大" data-cursor>＋</button>
+  </div>
+  <div class="lb-hint" aria-hidden="true">滚轮 / 按钮缩放 · 拖动平移 · 双击复位 · Esc 关闭</div>
+</div>
+
+<script>
+  const MIN = 1,
+    MAX = 8;
+
+  function initLightbox() {
+    const lb = document.getElementById("lightbox");
+    const img = document.getElementById("lb-img") as HTMLImageElement | null;
+    if (!lb || !img) return;
+
+    let scale = 1,
+      tx = 0,
+      ty = 0,
+      dragging = false,
+      sx = 0,
+      sy = 0,
+      lastTx = 0,
+      lastTy = 0;
+
+    const apply = () => {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (dragging ? "grabbing" : "grab") : "zoom-out";
+    };
+    const reset = () => {
+      scale = 1;
+      tx = 0;
+      ty = 0;
+      apply();
+    };
+    const setScale = (next: number) => {
+      scale = Math.min(MAX, Math.max(MIN, next));
+      if (scale === 1) {
+        tx = 0;
+        ty = 0;
+      }
+      apply();
+    };
+
+    const open = (src: string, alt: string) => {
+      img.src = src;
+      img.alt = alt;
+      reset();
+      lb.hidden = false;
+      document.documentElement.style.overflow = "hidden";
+      requestAnimationFrame(() => lb.classList.add("is-open"));
+    };
+    const close = () => {
+      lb.classList.remove("is-open");
+      document.documentElement.style.overflow = "";
+      window.setTimeout(() => {
+        lb.hidden = true;
+        img.src = "";
+      }, 240);
+    };
+
+    // 绑定正文图片
+    const proseImgs = Array.from(document.querySelectorAll<HTMLImageElement>(".prose img"));
+    const onImgClick = (e: Event) => {
+      const t = e.currentTarget as HTMLImageElement;
+      open(t.currentSrc || t.src, t.alt || "");
+    };
+    proseImgs.forEach((im) => im.addEventListener("click", onImgClick));
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setScale(scale * (1 + -e.deltaY * 0.0016));
+    };
+    const onDown = (e: PointerEvent) => {
+      if (scale <= 1) return;
+      dragging = true;
+      sx = e.clientX;
+      sy = e.clientY;
+      lastTx = tx;
+      lastTy = ty;
+      img.setPointerCapture(e.pointerId);
+      apply();
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!dragging) return;
+      tx = lastTx + (e.clientX - sx);
+      ty = lastTy + (e.clientY - sy);
+      apply();
+    };
+    const onUp = () => {
+      dragging = false;
+      apply();
+    };
+    const onDbl = () => (scale > 1 ? reset() : setScale(2.5));
+    const onKey = (e: KeyboardEvent) => {
+      if (lb.hidden) return;
+      if (e.key === "Escape") close();
+      else if (e.key === "+" || e.key === "=") setScale(scale * 1.3);
+      else if (e.key === "-") setScale(scale / 1.3);
+    };
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target === lb || target.classList.contains("lb-stage") || target.closest(".lb-close")) {
+        close();
+        return;
+      }
+      const btn = target.closest<HTMLElement>("[data-lb]");
+      if (!btn) return;
+      const act = btn.dataset.lb;
+      if (act === "in") setScale(scale * 1.3);
+      else if (act === "out") setScale(scale / 1.3);
+      else if (act === "reset") reset();
+    };
+
+    img.addEventListener("wheel", onWheel, { passive: false });
+    img.addEventListener("pointerdown", onDown);
+    img.addEventListener("pointermove", onMove);
+    img.addEventListener("pointerup", onUp);
+    img.addEventListener("pointercancel", onUp);
+    img.addEventListener("dblclick", onDbl);
+    lb.addEventListener("click", onClick);
+    document.addEventListener("keydown", onKey);
+
+    (window as any).__lbCleanup = () => {
+      proseImgs.forEach((im) => im.removeEventListener("click", onImgClick));
+      document.removeEventListener("keydown", onKey);
+      document.documentElement.style.overflow = "";
+    };
+  }
+
+  document.addEventListener("astro:page-load", initLightbox);
+  document.addEventListener("astro:before-swap", () => {
+    (window as any).__lbCleanup?.();
+  });
+</script>
