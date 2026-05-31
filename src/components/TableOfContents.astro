@@ -1,0 +1,96 @@
+---
+// 文章右侧大纲目录：列出正文 h2/h3，点击平滑跳转，随滚动高亮当前章节。
+// 宽屏时浮在内容区右侧留白，窄屏隐藏。
+interface Props {
+  headings: { depth: number; slug: string; text: string }[];
+}
+const { headings } = Astro.props;
+const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+{toc.length > 0 && (
+  <nav id="toc" class="toc" aria-label="目录">
+    <div class="toc-title">目录</div>
+    <ul>
+      {toc.map((h) => (
+        <li class:list={["toc-item", `toc-d${h.depth}`]}>
+          <a href={`#${h.slug}`} data-toc-link={h.slug} data-cursor>{h.text}</a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<script>
+  let cleanup: (() => void) | null = null;
+
+  function initTOC() {
+    if (cleanup) {
+      cleanup();
+      cleanup = null;
+    }
+    const toc = document.getElementById("toc");
+    if (!toc) return;
+    const links = Array.from(toc.querySelectorAll<HTMLAnchorElement>("a[data-toc-link]"));
+    const headingEls = links
+      .map((a) => document.getElementById(a.dataset.tocLink || ""))
+      .filter((el): el is HTMLElement => !!el);
+    if (!headingEls.length) return;
+
+    let activeSlug = "";
+    function setActive(slug: string) {
+      if (slug === activeSlug) return;
+      activeSlug = slug;
+      links.forEach((a) => a.classList.toggle("is-active", a.dataset.tocLink === slug));
+    }
+
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        let current = headingEls[0].id;
+        for (const h of headingEls) {
+          if (h.getBoundingClientRect().top <= 120) current = h.id;
+          else break;
+        }
+        setActive(current);
+        ticking = false;
+      });
+    }
+
+    function onClick(e: MouseEvent) {
+      const a = (e.target as HTMLElement).closest<HTMLAnchorElement>("a[data-toc-link]");
+      if (!a) return;
+      const id = a.dataset.tocLink || "";
+      const target = document.getElementById(id);
+      if (!target) return;
+      e.preventDefault();
+      const lenis = (window as any).__lenis;
+      if (lenis) {
+        lenis.scrollTo(target, { offset: -90 });
+      } else {
+        const y = target.getBoundingClientRect().top + window.scrollY - 90;
+        window.scrollTo({ top: y, behavior: "smooth" });
+      }
+      history.replaceState(null, "", "#" + id);
+    }
+
+    toc.addEventListener("click", onClick);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    cleanup = () => {
+      toc.removeEventListener("click", onClick);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }
+
+  document.addEventListener("astro:page-load", initTOC);
+  document.addEventListener("astro:before-swap", () => {
+    if (cleanup) {
+      cleanup();
+      cleanup = null;
+    }
+  });
+</script>

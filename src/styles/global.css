@@ -595,6 +595,58 @@ html.ink-transitioning main {
   transform: scale(1) rotate(-5deg);
 }
 
+/* 文章右侧大纲目录（宽屏时浮在内容区右侧留白，窄屏隐藏） */
+.toc {
+  position: fixed;
+  top: 50%;
+  left: calc(50% + 420px);
+  transform: translateY(-50%);
+  width: 200px;
+  max-height: 72vh;
+  overflow-y: auto;
+  z-index: 40;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+.toc-title {
+  color: var(--ink-light);
+  letter-spacing: 0.25em;
+  font-size: 0.72rem;
+  margin-bottom: 0.9rem;
+}
+.toc ul {
+  list-style: none;
+}
+.toc-item {
+  margin: 0.1rem 0;
+}
+.toc-d3 a {
+  padding-left: 1.5rem;
+  font-size: 0.76rem;
+}
+.toc a {
+  display: block;
+  color: var(--ink-light);
+  text-decoration: none;
+  padding: 0.18rem 0 0.18rem 0.7rem;
+  border-left: 2px solid var(--ink-wash);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.toc a:hover {
+  color: var(--ink-base);
+  border-left-color: var(--ink-light);
+}
+.toc a.is-active {
+  color: var(--cinnabar);
+  border-left-color: var(--cinnabar);
+}
+@media (max-width: 1279px) {
+  .toc {
+    display: none;
+  }
+}
+
 /* 阅读进度墨笔（文章页侧边竖纹随滚动填充） */
 #reading-progress {
   position: fixed;
