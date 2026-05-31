@@ -610,24 +610,35 @@ html.ink-transitioning main {
   margin-bottom: 1.4rem;
 }
 
-/* 项目预览图（截图 / Logo），灰度入墨、hover 复原本色 */
+/* 项目预览图：与容器同宽的横幅，超出高度裁切（object-fit:cover），灰度入墨、hover 复原本色 */
 .project-shot {
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--ink-wash);
+  box-shadow: 0 3px 14px rgba(42, 40, 37, 0.12);
   margin-bottom: 1.2rem;
 }
 .project-shot img {
-  max-width: min(100%, 420px);
-  max-height: 240px;
-  border-radius: 8px;
-  border: 1px solid var(--ink-wash);
-  box-shadow: 0 3px 14px rgba(42, 40, 37, 0.12);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
   filter: grayscale(0.85) contrast(1.02);
   opacity: 0.95;
-  transition: filter 0.45s ease, opacity 0.45s ease;
-  display: block;
+  transition: filter 0.45s ease, opacity 0.45s ease, transform 0.6s ease;
 }
 .ink-hover:hover .project-shot img {
   filter: grayscale(0);
   opacity: 1;
+  transform: scale(1.04);
+}
+@media (max-width: 600px) {
+  .project-shot {
+    height: 150px;
+  }
 }
 
 /* 卡片墨染悬停：墨色晕开 + 浮现朱砂小印 */
