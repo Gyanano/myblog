@@ -16,6 +16,16 @@ for (const [path, src] of Object.entries(codeModules)) {
   codeById[folder] = src;
 }
 
+if (import.meta.env.DEV) {
+  for (const a of animations) {
+    if (!codeById[a.id]) {
+      console.warn(
+        `[AnimationGallery] 找不到动画 "${a.id}" 的源码——请确认 meta.id 与其文件夹名一致。`
+      );
+    }
+  }
+}
+
 const btnStyle: CSSProperties = {
   fontFamily: 'var(--font-mono, monospace)',
   fontSize: '0.85rem',
@@ -41,9 +51,14 @@ type CopyKind = 'code' | 'prompt';
 function CopyButtons({ code, prompt }: { code: string; prompt: string }) {
   const [copied, setCopied] = useState<CopyKind | null>(null);
   const copy = async (kind: CopyKind, text: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(kind);
-    setTimeout(() => setCopied(null), 1500);
+    try {
+      if (!navigator.clipboard) throw new Error('clipboard API unavailable (需 HTTPS 或 localhost)');
+      await navigator.clipboard.writeText(text);
+      setCopied(kind);
+      setTimeout(() => setCopied(null), 1500);
+    } catch (err) {
+      console.error('[AnimationGallery] 复制失败：', err);
+    }
   };
   return (
     <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
