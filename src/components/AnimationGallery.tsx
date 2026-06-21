@@ -88,14 +88,34 @@ function AnimationPreview({ a }: { a: AnimationMeta }) {
   const hovering = useRef(false);
   const lastFrame = a.durationInFrames - 1;
 
+  // 从头播放，并用 rAF 轮询确保真的播起来。首次悬浮时 Player 的 ref/首帧可能尚未就绪，
+  // 直接调一次 play() 会「没反应」；这里持续重试直到 isPlaying（或移开 / 超过约 0.5s）。
+  const playFromStart = () => {
+    let seeked = false;
+    let tries = 0;
+    const tick = () => {
+      if (!hovering.current || tries++ > 30) return;
+      const p = ref.current;
+      if (p) {
+        if (!seeked) {
+          p.seekTo(0);
+          seeked = true;
+        }
+        if (!p.isPlaying()) p.play();
+        if (p.isPlaying()) return; // 已成功播起来，停止轮询
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
+  };
+
   useEffect(() => {
     const player = ref.current;
     if (!player) return;
     const onEnded = () => {
       if (hovering.current) {
         // 仍在悬浮：回到开头继续播，形成「悬浮即循环」
-        player.seekTo(0);
-        player.play();
+        playFromStart();
       } else {
         // 已移开：停在结束定格帧（文字/数字已显现，作为静态海报）
         player.pause();
@@ -104,14 +124,12 @@ function AnimationPreview({ a }: { a: AnimationMeta }) {
     };
     player.addEventListener('ended', onEnded);
     return () => player.removeEventListener('ended', onEnded);
+    // playFromStart 仅依赖 ref，无需进依赖数组
   }, [lastFrame]);
 
   const onEnter = () => {
     hovering.current = true;
-    const player = ref.current;
-    if (!player) return;
-    player.seekTo(0);
-    player.play();
+    playFromStart();
   };
   // 移出只置标志：当前这一遍会自然放完，再由 'ended' 收尾停住（至少完整播完一次）
   const onLeave = () => {
