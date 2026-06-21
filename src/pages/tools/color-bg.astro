@@ -1,0 +1,17 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ColorBg from "../../tools/color-bg/ColorBg.tsx";
+---
+
+<BaseLayout title="纯色背景生成器" description="选色并导出指定分辨率的纯色 PNG">
+  <section id="tool-color-bg">
+    <a
+      href="/tools"
+      style="font-family:var(--font-mono);font-size:.8rem;color:var(--ink-light);text-decoration:none"
+    >&lt; 器 / 工具</a>
+    <h2 class="gs-title" style="margin-top:.5rem">纯色背景生成器</h2>
+    <div class="gs-stagger" style="margin-top:1.5rem;max-width:760px">
+      <ColorBg client:only="react" />
+    </div>
+  </section>
+</BaseLayout>
