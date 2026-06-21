@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AnimationGallery from "../components/AnimationGallery.tsx";
+---
+
+<BaseLayout title="演" description="Remotion 动画库">
+  <section id="lab">
+    <h2 class="gs-title">演 / 动画库</h2>
+    <p
+      class="gs-stagger"
+      style="border-left:2px solid var(--cinnabar);padding-left:1rem;font-family:var(--font-calligraphy);font-size:1.6rem;color:var(--ink-dark)"
+    >
+      取其形，得其神。<br />
+      <span style="font-family:var(--font-serif);font-size:1rem;color:var(--ink-light)">
+        每个动画可实时预览，并一键复制「代码」或「Prompt」交给 Agent 复用。
+      </span>
+    </p>
+    <div class="gs-stagger" style="margin-top:2rem">
+      <AnimationGallery client:visible />
+    </div>
+  </section>
+</BaseLayout>
