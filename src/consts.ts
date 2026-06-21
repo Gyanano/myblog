@@ -10,6 +10,7 @@ export const NAV = [
   { href: "/about", label: "道", en: "About" },
   { href: "/work", label: "术", en: "Work" },
   { href: "/lab", label: "演", en: "Lab" },
+  { href: "/tools", label: "器", en: "Tools" },
   { href: "/blog", label: "墨痕", en: "Blog" },
 ];
 

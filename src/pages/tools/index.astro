@@ -1,0 +1,48 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { tools } from "../../tools/registry";
+---
+
+<BaseLayout title="器" description="日常小工具">
+  <section id="tools">
+    <h2 class="gs-title">器 / 工具</h2>
+    <p
+      class="gs-stagger"
+      style="border-left:2px solid var(--cinnabar);padding-left:1rem;font-family:var(--font-calligraphy);font-size:1.6rem;color:var(--ink-dark)"
+    >
+      利器在手。<br />
+      <span style="font-family:var(--font-serif);font-size:1rem;color:var(--ink-light)">
+        一些日常会用到的小工具，多数也服务于内容创作。
+      </span>
+    </p>
+    {tools.length === 0 ? (
+      <p class="gs-stagger" style="color:var(--ink-light);font-family:var(--font-mono)">
+        &gt; 工具整理中…
+      </p>
+    ) : (
+      <ul
+        class="gs-stagger"
+        style="list-style:none;padding:0;margin-top:2rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem"
+      >
+        {tools.map((t) => (
+          <li>
+            <a
+              href={`/tools/${t.id}`}
+              style="display:block;padding:1.2rem 1.3rem;border:1px solid var(--ink-wash);border-radius:2px;text-decoration:none;color:inherit;transition:border-color .2s"
+            >
+              <span
+                style="font-family:var(--font-mono);font-size:.7rem;color:var(--cinnabar);border:1px solid var(--cinnabar);padding:.1rem .5rem;border-radius:2px"
+              >
+                {t.category}
+              </span>
+              <h3 style="margin:.6rem 0 .3rem;font-family:var(--font-serif);color:var(--ink-dark)">
+                {t.title}
+              </h3>
+              <p style="margin:0;color:var(--ink-light);font-size:.9rem">{t.description}</p>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </section>
+</BaseLayout>
