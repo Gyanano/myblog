@@ -193,7 +193,7 @@ const fullTitle = title ? `${title} · ${SITE.author}` : SITE.title;
           if ("requestIdleCallback" in window) {
             (window as any).requestIdleCallback(run, { timeout: 800 });
           } else {
-            window.setTimeout(run, 180);
+            (window as any).setTimeout(run, 180);
           }
         };
       }
