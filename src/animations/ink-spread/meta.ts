@@ -1,7 +1,7 @@
-import type { AnimationMeta } from '../types';
+import { defineAnimation } from '../types';
 import { InkSpread } from './InkSpread';
 
-export const meta: AnimationMeta = {
+export const meta = defineAnimation({
   id: 'ink-spread',
   title: '墨点扩散',
   category: '入场',
@@ -24,4 +24,4 @@ export const meta: AnimationMeta = {
   durationInFrames: 60,
   width: 1920,
   height: 1080,
-};
+});

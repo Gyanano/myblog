@@ -1,7 +1,7 @@
-import type { AnimationMeta } from '../types';
+import { defineAnimation } from '../types';
 import { TextFadeIn } from './TextFadeIn';
 
-export const meta: AnimationMeta = {
+export const meta = defineAnimation({
   id: 'text-fade-in',
   title: '文字逐字淡入',
   category: '强调',
@@ -26,4 +26,4 @@ export const meta: AnimationMeta = {
   durationInFrames: 60,
   width: 1920,
   height: 1080,
-};
+});

@@ -24,3 +24,17 @@ export type AnimationMeta = {
   width: number;
   height: number;
 };
+
+/**
+ * 定义一个动画。借助泛型 P，在定义处即校验 `component` 的 props 与 `defaultProps`
+ * 是否一致（少字段/类型不符会在这里报错），对外仍擦除成松散的 `AnimationMeta`，
+ * 让 registry 能把不同 props 形状的动画放进同一个数组。
+ */
+export function defineAnimation<P>(
+  def: Omit<AnimationMeta, 'component' | 'defaultProps'> & {
+    component: ComponentType<P>;
+    defaultProps: P;
+  }
+): AnimationMeta {
+  return def as unknown as AnimationMeta;
+}

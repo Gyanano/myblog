@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Player } from '@remotion/player';
 import { animations } from '../animations/registry';
@@ -50,12 +50,18 @@ type CopyKind = 'code' | 'prompt';
 
 function CopyButtons({ code, prompt }: { code: string; prompt: string }) {
   const [copied, setCopied] = useState<CopyKind | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 卸载时清掉计时器：站点用 <ClientRouter />，导航会卸载该 island
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
   const copy = async (kind: CopyKind, text: string) => {
     try {
       if (!navigator.clipboard) throw new Error('clipboard API unavailable (需 HTTPS 或 localhost)');
       await navigator.clipboard.writeText(text);
       setCopied(kind);
-      setTimeout(() => setCopied(null), 1500);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(null), 1500);
     } catch (err) {
       console.error('[AnimationGallery] 复制失败：', err);
     }

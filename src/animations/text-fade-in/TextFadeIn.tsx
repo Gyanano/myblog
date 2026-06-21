@@ -11,8 +11,9 @@ export const TextFadeIn = ({ text, color, staggerFrames }: TextFadeInProps) => {
   const chars = [...text];
 
   return (
+    // #F2EFE8 = --paper-bg；此处写字面值，因为 Remotion 渲染无法访问站点 CSS 变量
     <AbsoluteFill style={{ backgroundColor: '#F2EFE8', justifyContent: 'center', alignItems: 'center' }}>
-      <div style={{ display: 'flex', fontSize: 120, fontWeight: 700, color, fontFamily: 'serif' }}>
+      <div style={{ display: 'flex', fontSize: 120, fontWeight: 700, color, fontFamily: '"Noto Serif SC", serif' }}>
         {chars.map((ch, i) => {
           const start = i * staggerFrames;
           const opacity = interpolate(frame, [start, start + 12], [0, 1], {

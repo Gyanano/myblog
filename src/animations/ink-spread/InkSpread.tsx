@@ -18,6 +18,7 @@ export const InkSpread = ({ color, speed }: InkSpreadProps) => {
   });
 
   return (
+    // #F2EFE8 = --paper-bg；此处写字面值，因为 Remotion 渲染无法访问站点 CSS 变量
     <AbsoluteFill style={{ backgroundColor: '#F2EFE8', justifyContent: 'center', alignItems: 'center' }}>
       <div
         style={{
