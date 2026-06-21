@@ -86,52 +86,50 @@ function CopyButtons({ code, prompt }: { code: string; prompt: string }) {
 function AnimationPreview({ a }: { a: AnimationMeta }) {
   const ref = useRef<PlayerRef>(null);
   const hovering = useRef(false);
+  const rafId = useRef<number | null>(null);
   const lastFrame = a.durationInFrames - 1;
+  const { fps } = a;
 
-  // 从头播放，并用 rAF 轮询确保真的播起来。首次悬浮时 Player 的 ref/首帧可能尚未就绪，
-  // 直接调一次 play() 会「没反应」；这里持续重试直到 isPlaying（或移开 / 超过约 0.5s）。
-  const playFromStart = () => {
-    let seeked = false;
-    let tries = 0;
-    const tick = () => {
-      if (!hovering.current || tries++ > 30) return;
-      const p = ref.current;
-      if (p) {
-        if (!seeked) {
-          p.seekTo(0);
-          seeked = true;
-        }
-        if (!p.isPlaying()) p.play();
-        if (p.isPlaying()) return; // 已成功播起来，停止轮询
-      }
-      requestAnimationFrame(tick);
-    };
-    tick();
+  const stop = () => {
+    if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+    rafId.current = null;
   };
 
-  useEffect(() => {
-    const player = ref.current;
-    if (!player) return;
-    const onEnded = () => {
-      if (hovering.current) {
-        // 仍在悬浮：回到开头继续播，形成「悬浮即循环」
-        playFromStart();
-      } else {
-        // 已移开：停在结束定格帧（文字/数字已显现，作为静态海报）
-        player.pause();
-        player.seekTo(lastFrame);
+  // 不用 Player 的 play()：它被当作媒体播放，受浏览器「用户激活」策略限制——
+  // mouseenter / 移动鼠标不算手势，会出现「先点几下页面才肯播」。
+  // 改为自己按时间推进帧：每帧用 seekTo 跳到对应帧；seekTo 只是跳帧渲染、不需要手势，
+  // 于是首次悬浮即可播放。
+  const playOnce = () => {
+    stop();
+    const startedAt = performance.now();
+    const step = (now: number) => {
+      const p = ref.current;
+      if (!p) {
+        // ref 尚未就绪，下一帧再试
+        rafId.current = requestAnimationFrame(step);
+        return;
       }
+      const elapsed = ((now - startedAt) / 1000) * fps;
+      if (elapsed >= lastFrame) {
+        p.seekTo(lastFrame); // 这一遍放完，停在定格帧
+        rafId.current = null;
+        if (hovering.current) playOnce(); // 仍在悬浮 → 再来一遍
+        return;
+      }
+      p.seekTo(Math.round(elapsed));
+      rafId.current = requestAnimationFrame(step);
     };
-    player.addEventListener('ended', onEnded);
-    return () => player.removeEventListener('ended', onEnded);
-    // playFromStart 仅依赖 ref，无需进依赖数组
-  }, [lastFrame]);
+    rafId.current = requestAnimationFrame(step);
+  };
+
+  // 卸载时清理（站点用 <ClientRouter />，导航会卸载该 island）
+  useEffect(() => stop, []);
 
   const onEnter = () => {
     hovering.current = true;
-    playFromStart();
+    playOnce();
   };
-  // 移出只置标志：当前这一遍会自然放完，再由 'ended' 收尾停住（至少完整播完一次）
+  // 移出只置标志：当前这一遍会自然放完（到末帧时因 hovering=false 不再续播，停在定格帧）
   const onLeave = () => {
     hovering.current = false;
   };
