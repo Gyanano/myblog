@@ -1,0 +1,11 @@
+title: "Bower"
+summary: "本地优先的设计资料归档与策展工具：收集灵感、整理看板，并用 AI 从参考图中提取视觉线索。"
+tags:
+  - "Next.js 15"
+  - "FastAPI"
+  - "SQLite"
+  - "LLM"
+  - "浏览器扩展"
+repo: "https://github.com/Gyanano/Bower"
+home: true
+order: 1

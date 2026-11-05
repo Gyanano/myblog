@@ -1,36 +1,76 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import SkillGrid from "../components/SkillGrid.astro";
-import { STATS } from "../consts";
+import { SITE } from "../consts";
+
+type Part = string | { text: string; href: string };
+const PARAGRAPHS: Part[][] = [
+  ["我是 Gyanano，做嵌入式，也做全栈。"],
+  ["现在的工作在 MCU 领域，和 C、RTOS、STM32、ESP32 打交道。"],
+  ["好奇心没有停在寄存器这一层，所以我也写 Web 应用和桌面工具，最近的项目大多和 AI Agent 有关。"],
+  ["我想弄清楚一个系统从底层到界面是怎么运转的：一个电子穿过晶体管，怎样变成屏幕上的一个像素。"],
+  ["写代码我偏向极简，看重清晰的抽象、类型安全和高效的内存管理。"],
+  ["四年多的经验，二十多个项目，INTP-A。"],
+  ["想聊聊的话，", { text: "发邮件给我", href: `mailto:${SITE.email}` }, "，或者去 ", { text: "GitHub", href: SITE.github }, " 看看。"],
+];
+const seg = new Intl.Segmenter("zh", { granularity: "word" });
+const words = (t: string) => [...seg.segment(t)].map((s) => s.segment);
 ---
 
-<BaseLayout title="道" description="理念与技能">
-  <section id="about">
-    <h2 class="gs-title">道 / 理念</h2>
-    <div class="gs-stagger">
+<BaseLayout title="关于" description="Gyanano 是谁，在做什么。">
+  <h1 class="sr">关于</h1>
+  <div class="al" id="al">
+    {PARAGRAPHS.map((parts) => (
       <p>
-        INTP-A「逻辑学家」。我不只是写代码，而是构建逻辑架构。我的热情在于深入底层——理解一个电子穿过晶体管，如何最终成为屏幕上的一个像素。
+        {parts.map((part) => typeof part === "string"
+          ? words(part).map((w) => <span class="w">{w}</span>)
+          : <a href={part.href} {...(part.href.startsWith("http") ? { target: "_blank", rel: "noopener" } : {})}>{words(part.text).map((w) => <span class="w">{w}</span>)}</a>)}
       </p>
-      <p>
-        当前我在 MCU 嵌入式领域工作，让硬件焕发生命；但好奇心不止于寄存器层。我同时构建全栈 Web 应用，因为我相信最好的系统应当从硅到浏览器一气呵成、无缝衔接。
-      </p>
-      <p>
-        我的设计哲学是极简而功能性的，正如我努力写出的代码。我推崇清晰的抽象、类型安全与高效的内存管理。
-      </p>
-    </div>
-    <div class="stats gs-stagger">
-      {STATS.map((st) => (
-        <div>
-          <div class="value">{st.value}</div>
-          <div class="label">{st.label}</div>
-        </div>
-      ))}
-    </div>
-    <h3
-      style="font-family:var(--font-mono);color:var(--ink-light);margin:3rem 0 1.5rem;letter-spacing:0.2em"
-    >
-      // 技能矩阵
-    </h3>
-    <SkillGrid />
-  </section>
+    ))}
+  </div>
 </BaseLayout>
+
+<script>
+  // 读到哪，亮到哪：每个词的亮度是滚动位置的纯函数，回滚时重新变暗
+  const DIM = 0.16;
+  let stop: (() => void) | null = null;
+
+  function init() {
+    stop?.();
+    stop = null;
+    const box = document.getElementById("al");
+    if (!box || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const words = [...box.querySelectorAll<HTMLElement>(".w")];
+    let tops: number[] = [], shown: number[] = [], H = 0, raf = 0;
+    const measure = () => {
+      H = innerHeight;
+      tops = words.map((w) => w.getBoundingClientRect().top + scrollY);
+      shown = words.map(() => -1);
+      draw();
+    };
+    const draw = () => {
+      raf = 0;
+      const y = scrollY;
+      const end = y + H >= document.documentElement.scrollHeight - 4;
+      words.forEach((w, i) => {
+        const p = end ? 1 : Math.min(1, Math.max(0, (H * 0.8 - (tops[i] - y)) / (H * 0.2)));
+        const o = Math.round((DIM + (1 - DIM) * p) * 50) / 50;
+        if (o !== shown[i]) {
+          shown[i] = o;
+          w.style.opacity = String(o);
+        }
+      });
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(draw); };
+    measure();
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", measure);
+    document.fonts?.ready.then(measure);
+    stop = () => {
+      cancelAnimationFrame(raf);
+      removeEventListener("scroll", onScroll);
+      removeEventListener("resize", measure);
+    };
+  }
+  document.addEventListener("astro:page-load", init);
+  document.addEventListener("astro:before-swap", () => { stop?.(); stop = null; });
+</script>

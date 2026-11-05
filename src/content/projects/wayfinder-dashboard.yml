@@ -1,0 +1,7 @@
+title: "wayfinder-dashboard"
+desc: "DeepSeek Harness 插件：把模糊想法画成可交互的决定图，节点是问题，边是依赖。人来做决定，Agent 推导下一层。"
+stack:
+  - "JavaScript"
+  - "DeepSeek Harness"
+repo: "https://github.com/Gyanano/wayfinder-dashboard"
+order: 7

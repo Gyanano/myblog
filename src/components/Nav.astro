@@ -1,18 +1,19 @@
 ---
 import { SITE, NAV } from "../consts";
-import ThemeToggle from "./ThemeToggle.astro";
+const path = Astro.url.pathname;
 ---
 
-<header>
-  <div class="nav-left">
-    <a class="logo" href="/" data-cursor>{SITE.author}</a>
-    <nav>
-      <ul>
-        {NAV.map((n) => (
-          <li><a href={n.href}>{n.label}</a></li>
-        ))}
-      </ul>
-    </nav>
-  </div>
-  <ThemeToggle />
+<header class:list={["site", { home: path === "/" }]} transition:persist="site-header">
+  <a class="logo" href="/" aria-label="首页">{SITE.author}</a>
+  <nav aria-label="主导航">
+    <ul>
+      {NAV.map((n) => (
+        <li>
+          <a href={n.href} aria-current={path.startsWith(n.href) ? "page" : undefined}>
+            {n.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
 </header>

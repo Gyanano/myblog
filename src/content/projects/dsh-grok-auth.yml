@@ -1,0 +1,8 @@
+title: "dsh-grok-auth"
+desc: "DeepSeek Harness 插件：复用官方 Grok CLI 的登录状态，让 xai 路由走 SuperGrok / X Premium 订阅。这是非官方通道，只用于个人开发。"
+stack:
+  - "TypeScript"
+  - "DeepSeek Harness"
+  - "OAuth"
+repo: "https://github.com/Gyanano/dsh-grok-auth"
+order: 8

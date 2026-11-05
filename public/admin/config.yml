@@ -1,0 +1,97 @@
+# 后台配置（Sveltia CMS）。路径都相对 extra-earth/ 仓库根目录。
+# 本地用法：npm run dev → Chrome 或 Edge 打开 /admin/index.html → Work with Local Repository → 选 extra-earth/。
+backend:
+  name: github
+  repo: Gyanano/myblog
+  branch: main
+
+output:
+  omit_empty_optional_fields: true
+
+media_folder: /public/works
+public_folder: /works
+
+collections:
+  - name: settings
+    label: 站点设置
+    delete: false
+    files:
+      - name: blog
+        label: 文章区
+        file: src/data/blog.json
+        fields:
+          - { label: 侧栏标签, name: tags, widget: list, hint: 按这里的顺序显示。没有公开文章的标签不会显示 }
+          - label: 系列
+            name: series
+            widget: list
+            required: false
+            fields:
+              - { label: 系列名, name: name, widget: string, hint: 和文章里填的系列名完全一致 }
+              - { label: 简介, name: description, widget: text }
+
+  - name: blog
+    label: 文章
+    label_singular: 文章
+    folder: /src/content/blog
+    extension: md
+    format: frontmatter
+    create: true
+    delete: true
+    slug: "{{slug}}"
+    media_folder: /public/blog
+    public_folder: /blog
+    sortable_fields: [date, title]
+    summary: "{{date}} · {{title}}"
+    fields:
+      - { label: 标题, name: title, widget: string }
+      - { label: 日期, name: date, widget: datetime, time_format: false, format: YYYY-MM-DD, picker_utc: true }
+      - { label: 简介, name: description, widget: text, hint: 显示在文章列表和搜索结果里 }
+      - { label: 标签, name: tags, widget: list, required: false, hint: 带「奇门遁甲」或「玄学」标签的文章不会主动显示 }
+      - { label: 系列, name: series, widget: string, required: false, hint: 同一系列填相同的名字 }
+      - { label: 系列内顺序, name: order, widget: number, value_type: int, required: false }
+      - { label: 不主动列出, name: unlisted, widget: boolean, required: false, default: false, hint: 页面仍可通过链接打开 }
+      - { label: 草稿, name: draft, widget: boolean, required: false, default: false, hint: 草稿不会发布 }
+      - { label: 正文, name: body, widget: markdown }
+
+  - name: works
+    label: 作品集
+    label_singular: 作品
+    folder: /src/content/works
+    extension: yml
+    format: yaml
+    create: true
+    delete: true
+    slug: "{{slug}}"
+    sortable_fields: [order, title]
+    summary: "{{order}} · {{title}}"
+    fields:
+      - { label: 名称, name: title, widget: string }
+      - { label: 简介, name: summary, widget: text, hint: 首页和作品页显示，建议 60 字以内 }
+      - { label: 标签, name: tags, widget: list, required: false, hint: 用逗号分隔 }
+      - { label: 封面, name: cover, widget: image, required: false, hint: 建议 4:3 横图。留空时显示字样占位 }
+      - { label: 更多图片, name: images, widget: image, multiple: true, required: false, hint: 显示在作品页 }
+      - { label: 作品链接, name: link, widget: string, required: false }
+      - { label: 代码仓库, name: repo, widget: string, required: false }
+      - { label: 显示在首页, name: home, widget: boolean, default: true, required: false, hint: 首页最多显示排序靠前的 6 件，其余只在作品页显示 }
+      - { label: 排序, name: order, widget: number, default: 99, value_type: int, hint: 数字小的排在前面 }
+
+  - name: projects
+    label: GitHub 项目
+    label_singular: 项目
+    folder: /src/content/projects
+    extension: yml
+    format: yaml
+    create: true
+    delete: true
+    slug: "{{slug}}"
+    media_folder: /public/projects
+    public_folder: /projects
+    sortable_fields: [order, title]
+    summary: "{{order}} · {{title}}"
+    fields:
+      - { label: 名称, name: title, widget: string }
+      - { label: 说明, name: desc, widget: text }
+      - { label: 技术栈, name: stack, widget: list, required: false, hint: 用逗号分隔 }
+      - { label: 仓库地址, name: repo, widget: string }
+      - { label: 截图, name: image, widget: image, required: false }
+      - { label: 排序, name: order, widget: number, default: 99, value_type: int, hint: 数字小的排在前面 }

@@ -1,9 +1,9 @@
 import type { APIRoute } from "astro";
-import { getPublishedPosts } from "../lib/blog";
+import { getPublishedPosts, getListedPosts } from "../lib/blog";
 
 // 构建期生成的全文检索索引：标题/摘要/标签/正文纯文本。客户端首次搜索时拉取一次。
 export const GET: APIRoute = async () => {
-  const posts = await getPublishedPosts();
+  const posts = getListedPosts(await getPublishedPosts());
   const index = posts.map((p) => ({
     title: p.data.title,
     description: p.data.description,

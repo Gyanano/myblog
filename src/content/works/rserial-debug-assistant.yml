@@ -1,0 +1,10 @@
+title: "RSerialDebugAssistant"
+summary: "面向嵌入式开发者的现代串口调试助手，跨平台桌面应用。"
+tags:
+  - "Tauri"
+  - "Rust"
+  - "React"
+  - "TypeScript"
+repo: "https://github.com/Gyanano/RSerialDebugAssistant"
+home: true
+order: 2

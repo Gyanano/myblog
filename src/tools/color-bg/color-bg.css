@@ -1,0 +1,28 @@
+/* 纯色背景生成器：整块舞台就是当前颜色，控制面板浮在右侧 */
+.cg { position: relative; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; height: 100%; min-height: 480px; padding: clamp(20px, 3vw, 40px); border-radius: 14px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); transition: background 0.25s; }
+.cg-read { min-width: 0; line-height: 1; }
+.cg-read strong { display: block; font: 500 clamp(44px, 8.4vw, 132px)/1 var(--font-body); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.cg-read span { display: block; margin-top: 14px; font: 400 15px/1.4 var(--font-mono); opacity: 0.72; }
+.cg-panel { flex: none; align-self: stretch; display: flex; flex-direction: column; gap: 12px; width: 300px; margin: auto 0 0; padding: 16px; border-radius: 12px; background: var(--bg-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2), 0 24px 60px -24px rgba(0, 0, 0, 0.6); align-self: flex-end; }
+.cg-row { display: flex; gap: 8px; }
+.cg-grow { flex: 1; min-width: 0; }
+.cg-swatch { position: relative; flex: none; width: 44px; height: 44px; border-radius: 10px; box-shadow: inset 0 0 0 1px var(--line-2); cursor: pointer; overflow: hidden; }
+.cg-swatch input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.cg-field { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 13px; color: var(--dim); }
+.cg-field:focus-within { box-shadow: inset 0 0 0 1px var(--cin); }
+.cg-field input { flex: 1; min-width: 0; width: 100%; border: 0; outline: 0; background: none; color: var(--ink); font: 400 14px var(--font-mono); -moz-appearance: textfield; appearance: textfield; }
+.cg-field input::-webkit-inner-spin-button { display: none; }
+.cg-field input[aria-invalid="true"] { color: #e5484d; }
+.cg-btn { flex: 1; height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: var(--ink-2); font: 500 13px var(--font-body); cursor: pointer; transition: background 0.2s, color 0.2s; }
+.cg-btn:hover { background: rgba(255, 255, 255, 0.09); color: var(--ink); }
+.cg-btn[aria-pressed="true"] { background: rgba(95, 212, 160, 0.14); color: var(--cin); }
+.cg-sep { height: 1px; margin: 4px 0; background: var(--line); }
+.cg-presets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cg-presets .cg-btn { font: 400 13px var(--font-mono); }
+.cg-export { height: 44px; border: 0; border-radius: 999px; background: var(--cin); color: #06140e; font: 600 15px var(--font-body); cursor: pointer; transition: background 0.2s; }
+.cg-export:hover { background: #79e0b3; }
+@media (max-width: 760px) {
+  .cg { flex-direction: column; align-items: stretch; height: auto; min-height: 0; padding: 20px 16px 16px; }
+  .cg-read { padding: 12vh 0 16px; }
+  .cg-panel { width: 100%; align-self: stretch; }
+}

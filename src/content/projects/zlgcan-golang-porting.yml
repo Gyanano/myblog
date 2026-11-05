@@ -1,0 +1,8 @@
+title: "zlgcan_golang_porting"
+desc: "ZLG CAN 盒驱动的 Go 封装：打开和关闭设备，初始化 CAN 与 CANFD 通道，收发消息。目前只在 Windows 下测试过。"
+stack:
+  - "Go"
+  - "CAN"
+  - "CANFD"
+repo: "https://github.com/Gyanano/zlgcan_golang_porting"
+order: 4

@@ -1,0 +1,122 @@
+<script>
+  // 换页转场：点击时内容淡出，同时开始加载；两者都完成后换页，新内容淡入。
+  // 顶栏跨页保留，不参与转场。文章区内部换页时只替换正文和目录，侧栏、顶栏、页脚的节点不动。
+  // 从索引点进文章时，点击的标题飞到文章标题的位置。
+  import { navigate, swapFunctions } from "astro:transitions/client";
+
+  const OUT = 200, CLEAR = 760;
+  const root = document.documentElement;
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const inDocs = (p: string) => p === "/blog" || p.startsWith("/blog/");
+  const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let busy = false, delay = false, timer = 0, docMode = false;
+  let flip: { rect: DOMRect; size: number; color: string } | null = null;
+
+  function internal(a: HTMLAnchorElement): URL | null {
+    if (!a.getAttribute("href") || a.target === "_blank" || a.hasAttribute("download")) return null;
+    let u: URL;
+    try { u = new URL(a.href, location.href); } catch { return null; }
+    if (u.origin !== location.origin) return null;
+    if (u.pathname === location.pathname && u.search === location.search) return null;
+    return u;
+  }
+
+  function syncHeader() {
+    const path = location.pathname;
+    document.querySelector("header.site")?.classList.toggle("home", path === "/");
+    document.querySelectorAll<HTMLAnchorElement>("header.site nav a").forEach((a) => {
+      if (path.startsWith(a.getAttribute("href") ?? "#")) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+  }
+
+  function flyTitle() {
+    const h = document.querySelector<HTMLElement>("#post h1");
+    if (!flip || !h) return;
+    const to = h.getBoundingClientRect();
+    const s = flip.size / parseFloat(getComputedStyle(h).fontSize);
+    h.animate(
+      [
+        { transformOrigin: "0 0", transform: `translate(${flip.rect.left - to.left}px, ${flip.rect.top - to.top}px) scale(${s})`, color: flip.color },
+        { transformOrigin: "0 0", transform: "none", color: getComputedStyle(h).color },
+      ],
+      { duration: 640, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+    );
+  }
+
+  if (!(window as any).__ptInit) {
+    (window as any).__ptInit = true;
+
+    document.addEventListener("click", (e) => {
+      if (e.defaultPrevented || reduced()) return;
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = (e.target as HTMLElement).closest("a") as HTMLAnchorElement | null;
+      const dest = a && internal(a);
+      if (!a || !dest) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (busy) return;
+      busy = true;
+      delay = true;
+      clearTimeout(timer);
+      root.classList.remove("pt-in", "pt-doc", "pt-flip");
+      docMode = inDocs(location.pathname) && inDocs(dest.pathname);
+      if (docMode) root.classList.add("pt-doc");
+      const title = docMode ? a.querySelector<HTMLElement>(":scope.pi-a .pi-t") : null;
+      if (title && /^\/blog\/(?!tags\/|series\/)./.test(dest.pathname)) {
+        const css = getComputedStyle(title);
+        flip = { rect: title.getBoundingClientRect(), size: parseFloat(css.fontSize), color: css.color };
+        a.classList.add("pt-src");
+        root.classList.add("pt-flip");
+      }
+      root.classList.add("pt-out");
+      navigate(dest.href);
+    }, { capture: true });
+
+    // 加载和淡出同时进行，换页时刻取两者中较晚的一个
+    document.addEventListener("astro:before-preparation", (e: any) => {
+      // 前进和后退不经过点击，在这里判断
+      docMode = inDocs(e.from.pathname) && inDocs(e.to.pathname);
+      if (!delay) return;
+      delay = false;
+      const load = e.loader;
+      e.loader = async () => { await Promise.all([load(), wait(OUT)]); };
+    });
+
+    // 侧栏内容相同时做局部替换：不重建 body，只换正文和目录
+    document.addEventListener("astro:before-swap", (e: any) => {
+      const doc: Document = e.newDocument;
+      const key = document.querySelector<HTMLElement>(".dsb")?.dataset.sb;
+      if (!key || key !== doc.querySelector<HTMLElement>(".dsb")?.dataset.sb) return;
+      e.swap = () => {
+        swapFunctions.deselectScripts(doc);
+        swapFunctions.swapRootAttributes(doc);
+        swapFunctions.swapHeadElements(doc);
+        const restoreFocus = swapFunctions.saveFocus();
+        const grid = document.querySelector(".docs-grid")!;
+        const next = doc.querySelector(".docs-grid")!;
+        grid.className = next.className;
+        grid.querySelector(".doc-main")!.replaceWith(next.querySelector(".doc-main")!);
+        grid.querySelector(".doc-aside")?.remove();
+        const aside = next.querySelector(".doc-aside");
+        if (aside) grid.append(aside);
+        restoreFocus();
+      };
+    });
+
+    document.addEventListener("astro:after-swap", () => {
+      syncHeader();
+      if (reduced()) return;
+      // 换页会清空 html 的 class，这里按记下的模式重新加回
+      root.classList.add("pt-in");
+      if (docMode) root.classList.add("pt-doc");
+      if (flip) root.classList.add("pt-flip");
+      flyTitle();
+      flip = null;
+      clearTimeout(timer);
+      timer = window.setTimeout(() => root.classList.remove("pt-in", "pt-doc", "pt-flip"), CLEAR);
+    });
+
+    document.addEventListener("astro:page-load", () => { busy = false; });
+  }
+</script>

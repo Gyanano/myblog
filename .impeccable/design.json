@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-05T16:09:02+00:00",
+  "title": "Design System: Gyanano · 竹言",
+  "extensions": {
+    "colorMeta": {
+      "touch-green": {
+        "role": "primary",
+        "displayName": "Touch Green",
+        "canonical": "#5fd4a0",
+        "tonalRamp": [
+          "#001105",
+          "#002e1b",
+          "#004f34",
+          "#00744e",
+          "#0c9a6a",
+          "#46be8b",
+          "#70e4af",
+          "#c2ffdf"
+        ],
+        "cssVariable": "--cin"
+      },
+      "touch-green-hover": {
+        "role": "primary",
+        "displayName": "Touch Green Hover",
+        "canonical": "#79e0b3",
+        "tonalRamp": [
+          "#001105",
+          "#002e1c",
+          "#004f35",
+          "#007450",
+          "#28986f",
+          "#54bc91",
+          "#7ae1b4",
+          "#c1ffe1"
+        ]
+      },
+      "on-green": {
+        "role": "primary",
+        "displayName": "On Green",
+        "canonical": "#06140e",
+        "tonalRamp": [
+          "#030e09",
+          "#1a2922",
+          "#36463f",
+          "#55665e",
+          "#76877f",
+          "#98aaa1",
+          "#bbcec5",
+          "#e0f4ea"
+        ]
+      },
+      "warm-light": {
+        "role": "secondary",
+        "displayName": "Warm Light",
+        "canonical": "#fff1dc",
+        "tonalRamp": [
+          "#232427",
+          "#34353a",
+          "#4b4c50",
+          "#6d6c6c",
+          "#979388",
+          "#c4bdab",
+          "#e6dec9",
+          "#fff4e2"
+        ],
+        "cssVariable": "--light"
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Dark Room",
+        "canonical": "#060708",
+        "tonalRamp": [
+          "#0a0b0c",
+          "#242526",
+          "#414243",
+          "#606163",
+          "#818284",
+          "#a3a5a7",
+          "#c8c9cb",
+          "#edeff0"
+        ],
+        "cssVariable": "--bg"
+      },
+      "bg-2": {
+        "role": "neutral",
+        "displayName": "Lifted Dark",
+        "canonical": "#101113",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#242527",
+          "#414244",
+          "#606164",
+          "#818285",
+          "#a4a5a8",
+          "#c8c9cc",
+          "#edeef1"
+        ],
+        "cssVariable": "--bg-2"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#222327",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#242529",
+          "#414246",
+          "#606166",
+          "#818287",
+          "#a3a5aa",
+          "#c7c9ce",
+          "#edeef4"
+        ],
+        "cssVariable": "--line"
+      },
+      "line-2": {
+        "role": "neutral",
+        "displayName": "Glass Line",
+        "canonical": "rgba(255, 255, 255, 0.1)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ],
+        "cssVariable": "--line-2"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#eeece6",
+        "tonalRamp": [
+          "#0c0b07",
+          "#262521",
+          "#43423d",
+          "#63615c",
+          "#84827d",
+          "#a7a59f",
+          "#cbc9c3",
+          "#f0eee8"
+        ],
+        "cssVariable": "--ink"
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink Soft",
+        "canonical": "#b9b6ae",
+        "tonalRamp": [
+          "#0d0b06",
+          "#27251f",
+          "#44423b",
+          "#64615a",
+          "#85827b",
+          "#a8a59d",
+          "#ccc9c1",
+          "#f1eee6"
+        ],
+        "cssVariable": "--ink-2"
+      },
+      "dim": {
+        "role": "neutral",
+        "displayName": "Dim",
+        "canonical": "#85837d",
+        "tonalRamp": [
+          "#0d0b07",
+          "#272520",
+          "#44423d",
+          "#63615b",
+          "#84827c",
+          "#a7a59f",
+          "#cbc9c2",
+          "#f1eee8"
+        ],
+        "cssVariable": "--dim"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "字标、无脚本回退字标和加载百分比。"
+      },
+      "logo": {
+        "displayName": "Logo",
+        "purpose": "顶栏站名。"
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "内页页头。"
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "首页分节标题。"
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "默认文字。"
+      },
+      "prose": {
+        "displayName": "Prose",
+        "purpose": "文章正文。"
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "分组名、次要链接、面包屑。"
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "日期、计数、快捷键、代码。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "panel-line",
+        "value": "inset 0 0 0 1px var(--line-2)",
+        "purpose": "工具方块、上下篇面板、代码块的轮廓。"
+      },
+      {
+        "name": "shot-fall",
+        "value": "inset 0 0 0 1px var(--line-2), 0 40px 80px -48px #000",
+        "purpose": "项目大图。"
+      },
+      {
+        "name": "dialog-fall",
+        "value": "inset 0 0 0 1px var(--line-2), 0 40px 90px -30px #000",
+        "purpose": "搜索弹层。"
+      },
+      {
+        "name": "pill-float",
+        "value": "0 12px 40px -12px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
+        "purpose": "滚动后的胶囊顶栏。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "位移、尺寸和箭头的默认缓动。CSS 变量是 --ease。"
+      },
+      {
+        "name": "switch-on",
+        "value": "0.85s linear; opacity 0.06, 0.7, 0.1, 1, 0.3, 0.92, 1 at 0%, 9%, 17%, 30%, 40%, 70%, 100%",
+        "purpose": "元素进入视口时亮起一次。触发边界是视口底部上移 12%。"
+      },
+      {
+        "name": "flashlight-flick",
+        "value": "beam opacity 0.75, 0.08, 1, 0.28, 0.92, 1 at 0, 70, 150, 260, 340, 620ms",
+        "purpose": "手电开灯时光锥的闪烁。"
+      },
+      {
+        "name": "header-compact",
+        "value": "0.6s var(--ease), triggered past 40px of scroll",
+        "purpose": "顶栏缩成胶囊。"
+      },
+      {
+        "name": "dot-dissolve",
+        "value": "#0f1f19 dots, cover 460ms, reveal 520ms, cubic in-out",
+        "purpose": "站内跳转转场。"
+      },
+      {
+        "name": "shot-relight",
+        "value": "filter 0.5s; transform 1.4s var(--ease)",
+        "purpose": "项目图悬停恢复全亮并轻微放大。"
+      },
+      {
+        "name": "smooth-scroll",
+        "value": "Lenis lerp 0.1, driven by gsap.ticker",
+        "purpose": "全局平滑滚动。减少动效时不启用。"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "docs-toc",
+        "value": "1180px"
+      },
+      {
+        "name": "sections-stack",
+        "value": "960px"
+      },
+      {
+        "name": "docs-drawer",
+        "value": "860px"
+      },
+      {
+        "name": "header-tight",
+        "value": "640px"
+      },
+      {
+        "name": "portrait",
+        "value": "max-aspect-ratio: 1/1"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "每屏最多一个的主要动作。",
+      "html": "<a class=\"ds-btn\" href=\"#\">看作品</a>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; height: 44px; padding: 0 24px; border-radius: 999px; font: 600 15px var(--font-body); color: #06140e; background: var(--cin); text-decoration: none; transition: background 0.25s, transform 0.5s var(--ease); } .ds-btn:hover { background: #79e0b3; transform: translateY(-2px); } .ds-btn:focus-visible { outline: 2px solid var(--cin); outline-offset: 3px; border-radius: 2px; }"
+    },
+    {
+      "name": "Text Link",
+      "kind": "button",
+      "refersTo": "text-link",
+      "description": "次要动作，配线性箭头。",
+      "html": "<a class=\"ds-tlink\" href=\"#\">读文章 <svg class=\"ds-arr\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12h15M13 6l6 6-6 6\"/></svg></a>",
+      "css": ".ds-tlink { display: inline-flex; align-items: center; gap: 7px; font: 500 15px var(--font-body); color: var(--ink-2); text-decoration: none; transition: color 0.2s; } .ds-tlink:hover { color: var(--ink); } .ds-tlink:hover > .ds-arr { transform: translateX(3px); } .ds-tlink:focus-visible { outline: 2px solid var(--cin); outline-offset: 3px; border-radius: 2px; } .ds-arr { width: 1em; height: 1em; flex: none; transition: transform 0.45s var(--ease); }"
+    },
+    {
+      "name": "Compact Header",
+      "kind": "nav",
+      "refersTo": "header-compact",
+      "description": "滚动超过 40px 后的悬浮胶囊顶栏，当前页有绿色圆点。",
+      "html": "<header class=\"ds-pill\"><a class=\"ds-logo\" href=\"#\">Gyanano</a><ul><li><a href=\"#\" aria-current=\"page\">作品</a></li><li><a href=\"#\">文章</a></li><li><a href=\"#\">关于</a></li></ul></header>",
+      "css": ".ds-pill { display: flex; justify-content: space-between; align-items: center; gap: 24px; width: min(720px, 100%); height: 50px; padding: 0 24px; border-radius: 999px; background: rgba(26, 27, 30, 0.6); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border: 1px solid var(--line-2); box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.06); } .ds-logo { font: 800 15px/1 var(--font-display); font-stretch: 128%; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; } .ds-pill ul { display: flex; gap: 24px; margin: 0; padding: 0; list-style: none; } .ds-pill li a { display: block; position: relative; padding: 6px 0; font: 450 15px/1 var(--font-body); color: var(--ink-2); text-decoration: none; transition: color 0.2s; } .ds-pill li a:hover, .ds-pill li a[aria-current=\"page\"] { color: var(--ink); } .ds-pill li a[aria-current=\"page\"]::after { content: \"\"; position: absolute; left: 50%; bottom: -4px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--cin); } .ds-pill a:focus-visible { outline: 2px solid var(--cin); outline-offset: 3px; border-radius: 2px; }"
+    },
+    {
+      "name": "Docs Sidebar Link",
+      "kind": "nav",
+      "refersTo": "sidebar-link",
+      "description": "文档侧栏的文章链接。",
+      "html": "<nav class=\"ds-side\"><a href=\"#\" aria-current=\"page\">Keil 中把数组定位到指定内存地址</a><a href=\"#\">Git 踩坑与常用指令笔记</a></nav>",
+      "css": ".ds-side { width: 260px; font-size: 14px; font-family: var(--font-body); } .ds-side a { display: block; color: var(--dim); padding: 6px 10px; border-radius: 6px; line-height: 1.5; text-decoration: none; transition: color 0.15s, background 0.15s; } .ds-side a:hover { color: var(--ink); background: rgba(255, 255, 255, 0.04); } .ds-side a[aria-current=\"page\"] { color: var(--cin); background: rgba(95, 212, 160, 0.09); font-weight: 500; } .ds-side a:focus-visible { outline: 2px solid var(--cin); outline-offset: 3px; border-radius: 2px; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-box",
+      "description": "搜索弹层的输入框和结果项。",
+      "html": "<div class=\"ds-search\"><input type=\"search\" placeholder=\"搜索文章\" aria-label=\"搜索文章\"><a href=\"#\"><b>Python 踩坑笔记</b><span>数据转换、终端配色与环境问题</span></a></div>",
+      "css": ".ds-search { width: min(620px, 92vw); background: #141517; border-radius: 14px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--line-2), 0 40px 90px -30px #000; font-family: var(--font-body); } .ds-search input { width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--line); padding: 17px 20px; font: 400 17px var(--font-body); color: var(--ink); caret-color: var(--cin); outline: none; } .ds-search input::placeholder { color: var(--dim); } .ds-search a { display: flex; flex-direction: column; gap: 2px; margin: 8px; padding: 10px 12px; border-radius: 8px; color: var(--ink); text-decoration: none; } .ds-search a:hover { background: rgba(95, 212, 160, 0.1); } .ds-search a:focus-visible { outline: 2px solid var(--cin); outline-offset: 3px; border-radius: 2px; } .ds-search b { font-weight: 600; } .ds-search span { font-size: 13px; color: var(--dim); }"
+    },
+    {
+      "name": "Post Row",
+      "kind": "custom",
+      "refersTo": "post-row",
+      "description": "文章索引的整行条目。",
+      "html": "<a class=\"ds-row\" href=\"#\"><span class=\"ds-t\">开发环境与工具速记</span><span class=\"ds-y\">2024-10-01</span><p class=\"ds-d\">零散但常用的小记录。</p></a>",
+      "css": ".ds-row { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 2px 24px; padding: 20px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none; font-family: var(--font-body); } .ds-t { font-size: clamp(17px, 1.5vw, 20px); font-weight: 500; line-height: 1.45; transition: color 0.2s; } .ds-y { font: 400 13px var(--font-mono); color: var(--dim); font-variant-numeric: tabular-nums; } .ds-d { grid-column: 1; margin: 0; color: var(--dim); font-size: 14px; max-width: 60ch; } .ds-row:hover .ds-t, .ds-row:focus-visible .ds-t { color: var(--cin); } .ds-row:focus-visible { outline: 2px solid var(--cin); outline-offset: 3px; border-radius: 2px; }"
+    },
+    {
+      "name": "List Row",
+      "kind": "custom",
+      "refersTo": "list-row",
+      "description": "技术栈的发丝线列表项，图标是单色遮罩。",
+      "html": "<ul class=\"ds-list\"><li><span class=\"ds-ic\"></span><span>Node.js</span></li><li><span class=\"ds-ic\"></span><span>Python</span></li></ul>",
+      "css": ".ds-list { width: 240px; margin: 0; padding: 0; list-style: none; font-family: var(--font-body); } .ds-list li { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line); color: var(--ink-2); font-size: 15px; font-weight: 450; line-height: 1.3; transition: color 0.2s; } .ds-list li:hover { color: var(--ink); } .ds-ic { flex: none; width: 19px; height: 19px; border-radius: 50%; background: currentColor; opacity: 0.72; transition: background 0.2s, opacity 0.2s; } .ds-list li:hover .ds-ic { background: var(--cin); opacity: 1; }"
+    },
+    {
+      "name": "Tool Tile",
+      "kind": "card",
+      "refersTo": "tool-tile",
+      "description": "内页工具入口。首页不使用。",
+      "html": "<a class=\"ds-tile\" href=\"#\"><h3>纯色背景生成器</h3><p>选一个颜色，导出 PNG。</p></a>",
+      "css": ".ds-tile { display: block; width: 280px; padding: 22px; border-radius: 10px; background: var(--bg-2); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--ink); text-decoration: none; font-family: var(--font-body); transition: box-shadow 0.25s; } .ds-tile:hover { box-shadow: inset 0 0 0 1px var(--cin); } .ds-tile:focus-visible { outline: 2px solid var(--cin); outline-offset: 3px; border-radius: 2px; } .ds-tile h3 { margin: 12px 0 6px; font-size: 20px; font-weight: 500; letter-spacing: -0.015em; } .ds-tile p { margin: 0; color: var(--dim); font-size: 14px; }"
+    },
+    {
+      "name": "Project Shot",
+      "kind": "card",
+      "refersTo": "project-shot",
+      "description": "项目大图框，默认压暗，悬停时恢复全亮。",
+      "html": "<figure class=\"ds-shot\"><div class=\"ds-shot-img\"></div></figure>",
+      "css": ".ds-shot { position: relative; width: 420px; max-width: 100%; aspect-ratio: 16 / 10; margin: 0; overflow: hidden; background: var(--bg-2); border-radius: 6px; box-shadow: inset 0 0 0 1px var(--line-2), 0 40px 80px -48px #000; } .ds-shot-img { position: absolute; inset: 0; background: var(--ink-2); filter: brightness(0.72); transition: transform 1.4s var(--ease), filter 0.5s; } .ds-shot:hover .ds-shot-img { transform: scale(1.025); filter: none; }"
+    },
+    {
+      "name": "Flashlight Stage",
+      "kind": "custom",
+      "refersTo": "flashlight-stage",
+      "description": "静态示意：光锥与文字带。真实舞台由画布绘制粒子字标，并跟随指针。",
+      "html": "<section class=\"ds-stage\"><div class=\"ds-beam\" aria-hidden=\"true\"></div><div class=\"ds-band\"><p>嵌入式与全栈工程师，在硬件与软件之间架桥。</p><a href=\"#\">看作品</a></div><p class=\"ds-wm\" aria-hidden=\"true\">Gyanano</p></section>",
+      "css": ".ds-stage { position: relative; width: 100%; height: 360px; overflow: hidden; background: var(--bg); isolation: isolate; font-family: var(--font-body); } .ds-beam { position: absolute; left: -40px; top: -120px; width: 1400px; height: 1400px; border-radius: 50%; transform: translate(-50%, -50%) rotate(142deg); background: conic-gradient(from -19deg, rgba(var(--light), 0) 0deg, rgba(var(--light), 0.15) 6.5deg, rgba(var(--light), 0.215) 19deg, rgba(var(--light), 0.15) 31.5deg, rgba(var(--light), 0) 38deg, rgba(var(--light), 0) 360deg); -webkit-mask-image: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, 0.42) 56%, transparent 100%); mask-image: radial-gradient(closest-side, #000 0%, rgba(0, 0, 0, 0.42) 56%, transparent 100%); } .ds-band { position: absolute; z-index: 2; left: 24px; right: 24px; bottom: 150px; display: flex; justify-content: space-between; align-items: center; gap: 24px; } .ds-band p { margin: 0; font-size: 20px; line-height: 1.3; font-weight: 450; letter-spacing: -0.015em; color: var(--ink); } .ds-band a { display: inline-flex; align-items: center; flex: none; height: 44px; padding: 0 24px; border-radius: 999px; font: 600 15px var(--font-body); color: #06140e; background: var(--cin); text-decoration: none; transition: background 0.25s, transform 0.5s var(--ease); } .ds-band a:hover { background: #79e0b3; transform: translateY(-2px); } .ds-band a:focus-visible { outline: 2px solid var(--cin); outline-offset: 3px; border-radius: 2px; } .ds-wm { position: absolute; left: 24px; bottom: 16px; margin: 0; font: 820 110px/1 var(--font-display); font-stretch: 128%; letter-spacing: -0.045em; color: var(--ink-2); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "暗室与一束手电",
+    "overview": "整站是一间近黑的暗室。访客移动指针，就是在移动手电。光落到的地方，物质才显形。字标由粒子组成，粒子被照亮后投下影子，被指针推开时变成绿色。\n\n展示页可以激进，文章页保持安静。两类页面共用同一间暗室、同一组令牌和同一个绿色。区别是：展示页有光锥，文档式页面没有光锥，只用实底顶栏和发丝线。\n\n内容不做浮动入场。元素像被开灯一样从暗处亮起，一次闪烁后稳定。这条动效语法和光源是同一个想法。",
+    "keyCharacteristics": [
+      "近黑底，暖白光，一个绿色。",
+      "光只有一个来源，位于视口左上方。",
+      "用发丝线和分栏组织内容，首页不用内容卡片。",
+      "中等字重，大字号靠负字距收紧。",
+      "元素从暗处闪亮，不做位移入场。"
+    ],
+    "rules": [
+      {
+        "name": "The Touch Green Rule",
+        "body": "绿色只用于交互、动作和当前状态。一块元素如果不能被碰到，也不表示当前位置，就不得使用绿色。",
+        "section": "colors"
+      },
+      {
+        "name": "The One Light Rule",
+        "body": "一页只有一个光源，位置固定在左上方。首页用手电舞台，展示型内页用页顶静态光锥。文档式页面没有光。",
+        "section": "colors"
+      },
+      {
+        "name": "The Expanded Nameplate Rule",
+        "body": "Anybody 只用于站名和加载数字。标题、正文和控件都不得使用 Anybody。",
+        "section": "typography"
+      },
+      {
+        "name": "The Medium Weight Rule",
+        "body": "标题默认 500。层级靠字号和负字距建立，字重不超过 600。Anybody 的 800 不受此条限制。",
+        "section": "typography"
+      },
+      {
+        "name": "The Mono Is Data Rule",
+        "body": "JetBrains Mono 只用于机器性数据：日期、计数、快捷键、代码。",
+        "section": "typography"
+      },
+      {
+        "name": "The Hairline Panel Rule",
+        "body": "内容面板的轮廓用内描边，包括工具方块、上下篇面板、代码块、项目图和搜索框。悬停只改描边颜色，面不上浮。悬浮控件和胶囊顶栏用 1px `line-2` 实线边框，不受此条限制。",
+        "section": "elevation"
+      },
+      {
+        "name": "The Frost Is Earned Rule",
+        "body": "背景模糊只用于内容从下方滚过的层：顶栏和搜索遮罩。静止的面不得使用背景模糊。",
+        "section": "elevation"
+      },
+      {
+        "name": "The Switch-On Rule",
+        "body": "元素进入视口时只亮起一次，从 6% 不透明度经过 0.85 秒的闪烁到全亮。入场不做位移。减少动效时，元素直接全亮。",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do 把新页面放进两种骨架之一：展示页或文档式页面。",
+      "Do 给每个栏目设计自己的版式，用发丝线、分栏和整行列表组织内容。",
+      "Do 用 `switch-on` 让内容进入视口时亮起一次，播放后不再重复。",
+      "Do 让图片默认压暗，悬停时恢复全亮。",
+      "Do 为每个动效提供减少动效下的静止状态。",
+      "Do 把文字色限定在 `ink`、`ink-2`、`dim` 三档。"
+    ],
+    "donts": [
+      "Don't 在控件上使用渐变。光锥是世界本身的材料，不受此条限制。",
+      "Don't 使用硬边偏移阴影。柔和投影和粒子影子不受此条限制。",
+      "Don't 在首页使用内容卡片。工具方块和上下篇面板是内页形式，不受此条限制。",
+      "Don't 使用衬线字体。",
+      "Don't 在文档式页面加光锥或粒子。",
+      "Don't 大面积铺绿色。主按钮是绿色实底的上限，转场网点用深绿。",
+      "Don't 增加第二个强调色或第二个光源。",
+      "Don't 让页面内容以滑入方式入场。侧栏抽屉和返回顶部按钮的位移不受此条限制。"
+    ]
+  }
+}

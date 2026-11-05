@@ -1,0 +1,75 @@
+---
+// 文章索引末尾的隐藏入口：几乎看不见的九点。按后天九宫的数序点对后进入未列出的系列。
+// 这不是访问控制，文章本身可以直接打开，也可以被搜索引擎收录。
+const PALACES = ["巽", "离", "坤", "震", "中", "兑", "艮", "坎", "乾"]; // 洛书方位：4 9 2 / 3 5 7 / 8 1 6
+const dots = [4, 12, 20].flatMap((y) => [4, 12, 20].map((x) => ({ x, y })));
+---
+
+<div class="ng-end">
+  <button class="ng-mark" type="button" id="ng-open" aria-label="九宫">
+    <svg viewBox="0 0 24 24" aria-hidden="true">{dots.map((d) => <circle cx={d.x} cy={d.y} r="1.4" />)}</svg>
+  </button>
+</div>
+
+<dialog class="ng" id="ng" aria-labelledby="ng-q" tabindex="-1">
+  <button class="ng-x" type="button" id="ng-close" aria-label="关闭">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18" /></svg>
+  </button>
+  <p class="ng-q" id="ng-q">按后天九宫的顺序，依次点击。</p>
+  <div class="ng-grid" id="ng-grid">
+    {PALACES.map((p) => <button type="button" data-p={p}>{p}</button>)}
+  </div>
+  <p class="ng-msg" id="ng-msg" role="status"></p>
+</dialog>
+
+<script>
+  import { navigate } from "astro:transitions/client";
+  const ORDER = "坎坤震巽中乾兑艮离";
+  // 路径写成编码形式，页面和脚本里不出现系列名
+  const DEST = "/blog/series/%E5%A5%87%E9%97%A8%E9%81%81%E7%94%B2%E5%9F%BA%E7%A1%80";
+
+  function init() {
+    const box = document.getElementById("ng") as HTMLDialogElement | null;
+    const grid = document.getElementById("ng-grid");
+    const msg = document.getElementById("ng-msg");
+    if (!box || !grid || !msg) return;
+    const cells = [...grid.querySelectorAll<HTMLButtonElement>("button")];
+    let step = 0, locked = false;
+    const reset = () => {
+      step = 0;
+      locked = false;
+      box.classList.remove("err", "ok");
+      cells.forEach((c) => c.classList.remove("on"));
+    };
+
+    document.getElementById("ng-open")?.addEventListener("click", () => {
+      reset();
+      msg.textContent = "";
+      box.showModal();
+      box.focus(); // 不把焦点框落在关闭按钮上
+    });
+    document.getElementById("ng-close")?.addEventListener("click", () => box.close());
+    box.addEventListener("click", (e) => { if (e.target === box) box.close(); });
+
+    grid.addEventListener("click", (e) => {
+      const cell = (e.target as HTMLElement).closest<HTMLButtonElement>("button[data-p]");
+      if (!cell || locked || cell.classList.contains("on")) return;
+      if (cell.dataset.p === ORDER[step]) {
+        cell.classList.add("on");
+        msg.textContent = "";
+        step += 1;
+        if (step === ORDER.length) {
+          locked = true;
+          box.classList.add("ok");
+          setTimeout(() => { box.close(); navigate(DEST); }, 620);
+        }
+        return;
+      }
+      locked = true;
+      box.classList.add("err");
+      msg.textContent = "顺序不对，重新来。";
+      setTimeout(reset, 760);
+    });
+  }
+  document.addEventListener("astro:page-load", init);
+</script>

@@ -1,0 +1,93 @@
+---
+// 全站文章搜索：⌘K / Ctrl+K 或点击顶栏「搜索」打开。数据来自构建期 /search-index.json。
+---
+
+<div id="sm" class="sm" hidden role="dialog" aria-modal="true" aria-label="搜索文章" transition:persist="search-modal">
+  <div class="sm-box">
+    <input id="sm-input" type="search" placeholder="搜索标题、标签、正文…" autocomplete="off" aria-label="搜索" />
+    <ul id="sm-list" role="listbox" data-lenis-prevent></ul>
+    <div class="sm-foot"><span>↑↓ 选择</span><span>回车 打开</span><span>Esc 关闭</span></div>
+  </div>
+</div>
+
+<script>
+  interface Item { title: string; description: string; tags: string[]; date: string; slug: string; body: string }
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+  let data: Item[] | null = null, loading: Promise<Item[]> | null = null, sel = 0, hits: Item[] = [];
+
+  function load() {
+    if (data) return Promise.resolve(data);
+    return (loading ??= fetch("/search-index.json").then((r) => r.json()).then((d) => (data = d)).catch(() => (data = [])));
+  }
+  function snippet(body: string, tokens: string[]) {
+    const low = body.toLowerCase();
+    let at = -1;
+    for (const t of tokens) { const i = low.indexOf(t); if (i >= 0 && (at < 0 || i < at)) at = i; }
+    if (at < 0) return "";
+    const s = Math.max(0, at - 24);
+    return (s > 0 ? "…" : "") + body.slice(s, s + 80) + "…";
+  }
+  function render(q: string) {
+    const list = document.getElementById("sm-list")!;
+    const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!tokens.length) { hits = []; list.innerHTML = ""; return; }
+    const scored: { it: Item; s: number }[] = [];
+    for (const it of data ?? []) {
+      let s = 0, all = true;
+      for (const t of tokens) {
+        const k = (it.title.toLowerCase().includes(t) ? 5 : 0) + (it.tags.some((x) => x.toLowerCase().includes(t)) ? 3 : 0) + (it.description.toLowerCase().includes(t) ? 2 : 0) + (it.body.toLowerCase().includes(t) ? 1 : 0);
+        if (!k) { all = false; break; }
+        s += k;
+      }
+      if (all) scored.push({ it, s });
+    }
+    scored.sort((a, b) => b.s - a.s);
+    hits = scored.slice(0, 8).map((x) => x.it);
+    sel = 0;
+    list.innerHTML = hits.length
+      ? hits.map((it, i) => {
+          const sn = snippet(it.body, tokens);
+          return `<li role="option" aria-selected="${i === 0}"><a href="/blog/${it.slug}"><b>${esc(it.title)}</b><span>${esc(sn || it.description)}</span></a></li>`;
+        }).join("")
+      : `<li class="sm-empty">没有匹配的文章</li>`;
+  }
+  function mark() {
+    document.querySelectorAll<HTMLElement>("#sm-list li[role=option]").forEach((li, i) => {
+      li.setAttribute("aria-selected", String(i === sel));
+      if (i === sel) li.scrollIntoView({ block: "nearest" });
+    });
+  }
+  function open() {
+    const m = document.getElementById("sm")!;
+    m.hidden = false;
+    document.documentElement.classList.add("sm-open");
+    const i = document.getElementById("sm-input") as HTMLInputElement;
+    i.value = ""; render(""); i.focus();
+    load();
+  }
+  function close() {
+    const m = document.getElementById("sm"); if (m) m.hidden = true;
+    document.documentElement.classList.remove("sm-open");
+  }
+  if (!(window as any).__smInit) {
+    (window as any).__smInit = true;
+    (window as any).__openSearch = open;
+    document.addEventListener("keydown", (e) => {
+      const m = document.getElementById("sm");
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { if (!m) return; e.preventDefault(); m.hidden ? open() : close(); return; }
+      if (!m || m.hidden) return;
+      if (e.key === "Escape") close();
+      else if (e.key === "ArrowDown") { e.preventDefault(); sel = Math.min(hits.length - 1, sel + 1); mark(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); sel = Math.max(0, sel - 1); mark(); }
+      else if (e.key === "Enter") { const a = document.querySelectorAll<HTMLAnchorElement>("#sm-list li[role=option] a")[sel]; if (a) { e.preventDefault(); a.click(); } }
+    });
+    document.addEventListener("input", (e) => {
+      if ((e.target as HTMLElement).id === "sm-input") load().then(() => render((e.target as HTMLInputElement).value));
+    });
+    document.addEventListener("click", (e) => {
+      const t = e.target as HTMLElement;
+      if (t.closest("[data-open-search]")) { e.preventDefault(); open(); }
+      else if (t.id === "sm" || t.closest("#sm-list a")) close();
+    });
+  }
+</script>

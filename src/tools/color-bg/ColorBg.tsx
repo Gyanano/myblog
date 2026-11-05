@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { CSSProperties } from 'react';
+import './color-bg.css';
 
 const PRESETS = [
   { label: '1920×1080', w: 1920, h: 1080 },
@@ -29,44 +29,21 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
-const btn: CSSProperties = {
-  fontFamily: 'var(--font-mono, monospace)',
-  fontSize: '0.85rem',
-  padding: '0.4rem 0.9rem',
-  border: '1px solid var(--ink-light, #8A857D)',
-  background: 'transparent',
-  color: 'var(--ink-dark, #2A2825)',
-  cursor: 'pointer',
-  borderRadius: 2,
-};
-
-const field: CSSProperties = {
-  fontFamily: 'var(--font-mono, monospace)',
-  fontSize: '0.9rem',
-  padding: '0.35rem 0.5rem',
-  border: '1px solid var(--ink-wash, rgba(42,40,37,0.2))',
-  borderRadius: 2,
-  background: 'transparent',
-  color: 'var(--ink-dark, #2A2825)',
-};
-
-const label: CSSProperties = {
-  fontFamily: 'var(--font-mono, monospace)',
-  fontSize: '0.7rem',
-  color: 'var(--ink-light, #8A857D)',
-  display: 'block',
-  marginBottom: '0.3rem',
-};
+/** 按亮度选舞台上的文字色，任何底色上都读得清 */
+function readableOn({ r, g, b }: { r: number; g: number; b: number }): string {
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 150 ? '#0b0c0d' : '#f4f2ec';
+}
 
 export default function ColorBg() {
-  const [color, setColor] = useState('#BE3A3A');
-  const [hexInput, setHexInput] = useState('#BE3A3A');
+  const [color, setColor] = useState('#2F6F5E');
+  const [hexInput, setHexInput] = useState('#2F6F5E');
   const [width, setWidth] = useState(1920);
   const [height, setHeight] = useState(1080);
   const [copied, setCopied] = useState<string | null>(null);
 
-  const { r, g, b } = hexToRgb(color);
-  const rgbString = `rgb(${r}, ${g}, ${b})`;
+  const rgb = hexToRgb(color);
+  const rgbString = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  const hexValid = normalizeHex(hexInput) !== null;
 
   const onHexInput = (v: string) => {
     setHexInput(v);
@@ -81,14 +58,15 @@ export default function ColorBg() {
 
   const copy = async (key: string, text: string) => {
     try {
-      if (!navigator.clipboard) throw new Error('clipboard unavailable (需 HTTPS 或 localhost)');
       await navigator.clipboard.writeText(text);
       setCopied(key);
-      setTimeout(() => setCopied(null), 1500);
-    } catch (err) {
-      console.error('[ColorBg] 复制失败：', err);
+    } catch {
+      setCopied(`${key}-fail`);
     }
+    setTimeout(() => setCopied(null), 1500);
   };
+  const copyLabel = (key: string, text: string) =>
+    copied === key ? '已复制' : copied === `${key}-fail` ? '复制失败' : text;
 
   const exportPng = () => {
     const w = clamp(Math.round(width) || 1, 1, 8192);
@@ -114,115 +92,60 @@ export default function ColorBg() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      {/* 实时预览 */}
-      <div
-        style={{
-          height: '38vh',
-          minHeight: 220,
-          borderRadius: 2,
-          border: '1px solid var(--ink-wash, rgba(42,40,37,0.15))',
-          background: color,
-          display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'flex-end',
-          padding: '0.8rem',
-        }}
-      >
-        <span
-          style={{
-            fontFamily: 'var(--font-mono, monospace)',
-            fontSize: '0.8rem',
-            color: 'rgba(255,255,255,0.85)',
-            mixBlendMode: 'difference',
-          }}
-        >
-          {color} · {rgbString}
-        </span>
+    <div className="cg" style={{ background: color, color: readableOn(rgb) }}>
+      <div className="cg-read" aria-live="polite">
+        <strong>{color}</strong>
+        <span>{rgbString}</span>
       </div>
 
-      {/* 取色 + 色值 */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.2rem', alignItems: 'flex-end' }}>
-        <div>
-          <span style={label}>取色器</span>
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => onPicker(e.target.value)}
-            style={{ width: 56, height: 40, border: 'none', background: 'transparent', cursor: 'pointer' }}
-          />
+      <div className="cg-panel">
+        <div className="cg-row">
+          <label className="cg-swatch" style={{ background: color }}>
+            <span className="sr">取色器</span>
+            <input type="color" value={color} onChange={(e) => onPicker(e.target.value)} />
+          </label>
+          <label className="cg-field cg-grow">
+            <span>HEX</span>
+            <input
+              type="text"
+              value={hexInput}
+              onChange={(e) => onHexInput(e.target.value)}
+              spellCheck={false}
+              aria-invalid={!hexValid}
+            />
+          </label>
         </div>
-        <div>
-          <span style={label}>HEX</span>
-          <input
-            type="text"
-            value={hexInput}
-            onChange={(e) => onHexInput(e.target.value)}
-            spellCheck={false}
-            style={{ ...field, width: 110 }}
-          />
+        <div className="cg-row">
+          <button type="button" className="cg-btn" onClick={() => copy('hex', color)}>{copyLabel('hex', '复制 HEX')}</button>
+          <button type="button" className="cg-btn" onClick={() => copy('rgb', rgbString)}>{copyLabel('rgb', '复制 RGB')}</button>
         </div>
-        <div>
-          <span style={label}>RGB</span>
-          <input type="text" value={rgbString} readOnly style={{ ...field, width: 160 }} />
-        </div>
-        <button style={btn} onClick={() => copy('hex', color)}>
-          {copied === 'hex' ? '已复制 ✓' : '复制 HEX'}
-        </button>
-        <button style={btn} onClick={() => copy('rgb', rgbString)}>
-          {copied === 'rgb' ? '已复制 ✓' : '复制 RGB'}
-        </button>
-      </div>
 
-      {/* 分辨率 + 导出 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <div className="cg-sep" />
+
+        <div className="cg-presets">
           {PRESETS.map((p) => (
             <button
               key={p.label}
-              style={{
-                ...btn,
-                borderColor:
-                  width === p.w && height === p.h ? 'var(--cinnabar, #BE3A3A)' : 'var(--ink-light, #8A857D)',
-                color:
-                  width === p.w && height === p.h ? 'var(--cinnabar, #BE3A3A)' : 'var(--ink-dark, #2A2825)',
-              }}
-              onClick={() => {
-                setWidth(p.w);
-                setHeight(p.h);
-              }}
+              type="button"
+              className="cg-btn"
+              aria-pressed={width === p.w && height === p.h}
+              onClick={() => { setWidth(p.w); setHeight(p.h); }}
             >
               {p.label}
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.2rem', alignItems: 'flex-end' }}>
-          <div>
-            <span style={label}>宽 (px)</span>
-            <input
-              type="number"
-              min={1}
-              max={8192}
-              value={width}
-              onChange={(e) => setWidth(Number(e.target.value))}
-              style={{ ...field, width: 100 }}
-            />
-          </div>
-          <div>
-            <span style={label}>高 (px)</span>
-            <input
-              type="number"
-              min={1}
-              max={8192}
-              value={height}
-              onChange={(e) => setHeight(Number(e.target.value))}
-              style={{ ...field, width: 100 }}
-            />
-          </div>
-          <button style={{ ...btn, borderColor: 'var(--cinnabar)', color: 'var(--cinnabar)' }} onClick={exportPng}>
-            导出 PNG
-          </button>
+        <div className="cg-row">
+          <label className="cg-field cg-grow">
+            <span>宽</span>
+            <input type="number" min={1} max={8192} value={width} onChange={(e) => setWidth(Number(e.target.value))} />
+          </label>
+          <label className="cg-field cg-grow">
+            <span>高</span>
+            <input type="number" min={1} max={8192} value={height} onChange={(e) => setHeight(Number(e.target.value))} />
+          </label>
         </div>
+        <button type="button" className="cg-export" onClick={exportPng}>导出 PNG</button>
       </div>
     </div>
   );

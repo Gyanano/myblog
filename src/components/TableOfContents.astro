@@ -9,7 +9,7 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 ---
 
 {toc.length > 0 && (
-  <aside id="toc" class="toc" aria-label="目录">
+  <aside id="toc" class="toc" aria-label="目录" data-lenis-prevent>
     <div class="toc-title">目录</div>
     <ul>
       {toc.map((h) => (
@@ -42,6 +42,9 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
       if (slug === activeSlug) return;
       activeSlug = slug;
       links.forEach((a) => a.classList.toggle("is-active", a.dataset.tocLink === slug));
+      // 目录比视口长时，让当前项留在目录的可视范围内
+      const cur = links.find((a) => a.dataset.tocLink === slug);
+      if (cur && toc && toc.scrollHeight > toc.clientHeight) toc.scrollTop = cur.offsetTop - toc.offsetTop - toc.clientHeight / 2;
     }
 
     let ticking = false;

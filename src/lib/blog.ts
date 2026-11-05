@@ -1,4 +1,5 @@
 import { getCollection, type CollectionEntry } from "astro:content";
+import blogConfig from "../data/blog.json";
 
 export type Post = CollectionEntry<"blog">;
 
@@ -17,6 +18,30 @@ export function collectTags(posts: Post[]): { tag: string; count: number }[] {
     for (const t of p.data.tags) map.set(t, (map.get(t) ?? 0) + 1);
   }
   return [...map.entries()].sort((a, b) => b[1] - a[1]).map(([tag, count]) => ({ tag, count }));
+}
+
+/**
+ * 侧栏列出的标签，由博主在 src/data/blog.json 指定，顺序照写。
+ * posts 必须是公开文章：没有公开文章的标签不列出，配置里写错也不会露出未列出的文章。
+ * 当前所在的标签总是列出，读者才知道自己在哪。
+ */
+export function navTags(posts: Post[], active?: string): { tag: string; count: number }[] {
+  const all = new Map(collectTags(posts).map((t) => [t.tag, t.count]));
+  const names = [...blogConfig.tags];
+  if (active && !names.includes(active)) names.push(active);
+  return names.flatMap((tag) => (all.has(tag) ? [{ tag, count: all.get(tag)! }] : []));
+}
+
+// 带这些标签的文章默认不主动列出（也可在 frontmatter 里单篇写 unlisted: true）。
+const UNLISTED_TAGS = new Set(["玄学", "奇门遁甲"]);
+
+export function isUnlisted(p: Post): boolean {
+  return p.data.unlisted || p.data.tags.some((t) => UNLISTED_TAGS.has(t));
+}
+
+/** 可以主动展示的文章：用于首页、文章列表、侧栏、标签栏和搜索。 */
+export function getListedPosts(posts: Post[]): Post[] {
+  return posts.filter((p) => !isUnlisted(p));
 }
 
 export function totalPages(count: number): number {
@@ -55,21 +80,12 @@ export function groupTags(posts: Post[]): TagGroup[] {
 
 // ---------------- 系列合集 ----------------
 
-/** 各系列的展示信息（描述/封面可在此登记，缺省回退到通用文案）。 */
-export const SERIES_META: Record<string, { description: string; cover?: string }> = {
-  奇门遁甲基础: {
-    description: "从「何谓奇门」到「吉格凶格」，时家奇门转盘法的入门系列笔记，按章节循序渐进。",
-    cover: "/blog/liuyi-jixing/1.png",
-  },
-};
-
 export interface SeriesInfo {
   name: string;
   posts: Post[]; // 按 order 升序（系列内阅读顺序）
   latest: Date; // 系列内最新文章日期，用于在时间流中定位
   count: number;
   description: string;
-  cover?: string;
 }
 
 /** 系列名 → 系列信息。 */
@@ -89,8 +105,7 @@ export function getSeriesMap(posts: Post[]): Map<string, SeriesInfo> {
       posts: arr,
       latest,
       count: arr.length,
-      description: SERIES_META[name]?.description ?? `「${name}」系列，共 ${arr.length} 篇。`,
-      cover: SERIES_META[name]?.cover,
+      description: blogConfig.series.find((x) => x.name === name)?.description ?? `「${name}」系列，共 ${arr.length} 篇。`,
     });
   }
   return result;
@@ -122,6 +137,13 @@ export function getFeedItems(posts: Post[]): FeedItem[] {
   return items;
 }
 
+/** 侧栏的系列列表。posts 必须是公开文章；未列出的系列只在读者已经进入它时才加进来。 */
+export function navSeries(posts: Post[], current?: SeriesInfo): { name: string; count: number }[] {
+  const list = [...getSeriesMap(posts).values()].map(({ name, count }) => ({ name, count }));
+  if (current && !list.some((s) => s.name === current.name)) list.push({ name: current.name, count: current.count });
+  return list;
+}
+
 /** 给定文章在其系列中的导航信息（位置、上一篇、下一篇）；非系列文章返回 null。 */
 export function getSeriesNav(
   posts: Post[],
@@ -139,4 +161,35 @@ export function getSeriesNav(
     prev: idx > 0 ? info.posts[idx - 1] : null,
     next: idx < info.count - 1 ? info.posts[idx + 1] : null,
   };
+}
+
+
+// ---------------- 文档式侧栏 ----------------
+
+export interface DocsGroup {
+  key: string; // 系列名，或 "notes"
+  label: string;
+  href?: string; // 系列目录页
+  items: Post[]; // 阅读顺序
+}
+
+const NOTES_LABEL = "开发笔记";
+
+/** 侧栏分组：每个系列一组（按 order），其余散篇合为「开发笔记」（按日期倒序）。 */
+export function getDocsNav(posts: Post[]): DocsGroup[] {
+  const groups: DocsGroup[] = [];
+  for (const info of getSeriesMap(posts).values()) {
+    groups.push({ key: info.name, label: info.name, href: `/blog/series/${encodeURIComponent(info.name)}`, items: info.posts });
+  }
+  const notes = posts.filter((p) => !p.data.series);
+  if (notes.length) groups.push({ key: "notes", label: NOTES_LABEL, items: notes });
+  return groups;
+}
+
+/** 当前文章所在分组及其上一篇、下一篇（组内顺序）。 */
+export function getNeighbors(groups: DocsGroup[], current: Post) {
+  const g = groups.find((x) => x.items.some((p) => p.id === current.id));
+  if (!g) return { group: null as DocsGroup | null, prev: null as Post | null, next: null as Post | null };
+  const i = g.items.findIndex((p) => p.id === current.id);
+  return { group: g, prev: i > 0 ? g.items[i - 1] : null, next: i < g.items.length - 1 ? g.items[i + 1] : null };
 }

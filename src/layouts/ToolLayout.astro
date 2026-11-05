@@ -1,0 +1,33 @@
+---
+// 工具工作台：顶栏和全站一致，返回条以下整块区域归工具自己，样式放在工具目录里。
+import BaseLayout from "./BaseLayout.astro";
+import Arrow from "../components/Arrow.astro";
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} lamp={false} footer={false}>
+  <div class="tb">
+    <div class="tb-bar">
+      <a class="tlink" href="/tools"><Arrow dir="left" />工具</a>
+      <h1>{title}</h1>
+    </div>
+    <div class="tb-stage" data-lenis-prevent><slot /></div>
+  </div>
+</BaseLayout>
+
+<script>
+  // 工具脚本加载失败时不留空白，告诉读者怎么恢复
+  let timer = 0;
+  document.addEventListener("astro:page-load", () => {
+    clearTimeout(timer);
+    if (!document.querySelector(".tb-load")) return;
+    timer = window.setTimeout(() => {
+      const note = document.querySelector(".tb-load");
+      if (note) note.textContent = "工具没有加载出来，请刷新页面重试。";
+    }, 8000);
+  });
+</script>

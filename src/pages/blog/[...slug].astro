@@ -1,11 +1,12 @@
 ---
 import { getCollection, render } from "astro:content";
-import BaseLayout from "../../layouts/BaseLayout.astro";
+import DocsLayout from "../../layouts/DocsLayout.astro";
 import ReadingProgress from "../../components/ReadingProgress.astro";
 import TableOfContents from "../../components/TableOfContents.astro";
-import SeriesNav from "../../components/SeriesNav.astro";
+import PrevNext from "../../components/PrevNext.astro";
 import Lightbox from "../../components/Lightbox.astro";
-import { getPublishedPosts, getSeriesNav } from "../../lib/blog";
+import CodeTools from "../../components/CodeTools.astro";
+import { getPublishedPosts, getListedPosts, getDocsNav, getNeighbors, getSeriesNav, isUnlisted, navTags, navSeries } from "../../lib/blog";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
@@ -15,42 +16,40 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
 const d = post.data.date.toISOString().slice(0, 10);
-const seriesNav = getSeriesNav(await getPublishedPosts(), post);
+const all = await getPublishedPosts();
+// 公开文章的侧栏只列公开文章；从直链进入未列出文章的读者，才看得到它所在的分组
+const hidden = isUnlisted(post);
+const groups = getDocsNav(hidden ? all : getListedPosts(all));
+const { group, prev, next } = getNeighbors(groups, post);
+const place = getSeriesNav(all, post);
+// 公开文章的侧栏和索引页完全相同，换页时不用动；系列文章列出本系列的章节
+const listed = getListedPosts(all);
+const chapters = group?.href ? [group] : undefined;
+const outline = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 ---
 
-<BaseLayout title={post.data.title} description={post.data.description}>
+<DocsLayout title={post.data.title} description={post.data.description} groups={chapters} tags={chapters || hidden ? undefined : navTags(listed)} series={chapters || hidden ? undefined : navSeries(listed)} currentId={post.id}>
   <ReadingProgress />
-  <TableOfContents headings={headings} />
-  <article id="post" class="gs-stagger">
-    <div style="font-family:var(--font-mono);color:var(--ink-light)">{d}</div>
-    <h1 style="font-size:3rem;margin:0.5rem 0;color:var(--ink-dark)">{post.data.title}</h1>
-    <div style="font-family:var(--font-mono);font-size:0.8rem;color:var(--ink-light);margin-bottom:2.5rem">
-      {post.data.tags.map((t) => `#${t}`).join("  ")}
+  <article id="post">
+    <h1>{post.data.title}</h1>
+    <div class="meta">
+      <time>{d}</time>
+      {group?.href && <a href={group.href}>{group.label}</a>}
+      {place && <span>第 {place.index + 1} 篇，共 {place.count} 篇</span>}
+      {post.data.tags.map((t) => <a href={`/blog/tags/${encodeURIComponent(t)}`}>#{t}</a>)}
     </div>
-    {seriesNav && (
-      <SeriesNav
-        name={seriesNav.name}
-        index={seriesNav.index}
-        count={seriesNav.count}
-        prev={seriesNav.prev}
-        next={seriesNav.next}
-      />
+    {outline.length > 1 && (
+      <details class="toc-m">
+        <summary>目录</summary>
+        <ul>{outline.map((h) => <li class={`toc-d${h.depth}`}><a href={`#${h.slug}`}>{h.text}</a></li>)}</ul>
+      </details>
     )}
     <div class="prose">
       <Content />
     </div>
-    {seriesNav && (
-      <SeriesNav
-        name={seriesNav.name}
-        index={seriesNav.index}
-        count={seriesNav.count}
-        prev={seriesNav.prev}
-        next={seriesNav.next}
-      />
-    )}
-    <p style="margin-top:3rem">
-      <a href="/blog" data-cursor style="color:var(--cinnabar);text-decoration:none">← 返回墨痕</a>
-    </p>
+    <PrevNext prev={prev} next={next} />
   </article>
+  <TableOfContents slot="aside" headings={headings} />
   <Lightbox />
-</BaseLayout>
+  <CodeTools />
+</DocsLayout>

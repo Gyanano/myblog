@@ -1,0 +1,17 @@
+---
+// 作品封面。没有上传封面时显示字样占位，版式上与真实封面占同样的位置。
+interface Props {
+  title: string;
+  cover?: string | null;
+  eager?: boolean;
+}
+const { title, cover, eager = false } = Astro.props;
+// 占位字号按最长的词收缩，长名字不会被裁掉
+const longest = Math.max(...title.split(/\s+/).map((w) => w.length));
+---
+
+{cover ? (
+  <img class="wc" src={cover} alt={`${title} 封面`} loading={eager ? "eager" : "lazy"} decoding="async" />
+) : (
+  <div class="wc wc-ph" aria-hidden="true"><span style={`--w:${longest}`}>{title}</span></div>
+)}

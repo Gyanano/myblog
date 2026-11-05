@@ -1,0 +1,8 @@
+title: "dsh-skill-manager"
+desc: "DeepSeek Harness Desktop 的第三方技能管理器：全局开关技能和 MCP，按工作区细调，并能从 GitHub 仓库或本地目录导入技能。"
+stack:
+  - "TypeScript"
+  - "DeepSeek Harness"
+  - "MCP"
+repo: "https://github.com/Gyanano/dsh-skill-manager"
+order: 5

@@ -1,0 +1,9 @@
+title: "Cohort"
+desc: "本地优先的多 Agent 协作平台，以「聊天应用加办公室」为隐喻：你雇用、指挥和监控一组 AI 员工。平台只做进程编排、消息路由和状态汇总。目前是预发布版，优先支持 macOS。"
+stack:
+  - "Rust"
+  - "GPUI"
+  - "SQLite"
+  - "JSON-RPC"
+repo: "https://github.com/Gyanano/Cohort"
+order: 2

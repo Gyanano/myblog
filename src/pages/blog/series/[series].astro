@@ -1,50 +1,29 @@
 ---
-import { getPublishedPosts, getSeriesMap, type SeriesInfo } from "../../../lib/blog";
-import BaseLayout from "../../../layouts/BaseLayout.astro";
-import PostCard from "../../../components/PostCard.astro";
+import { getPublishedPosts, getListedPosts, getSeriesMap, navTags, navSeries, type SeriesInfo } from "../../../lib/blog";
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import PostIndex from "../../../components/PostIndex.astro";
+import Arrow from "../../../components/Arrow.astro";
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();
-  const seriesMap = getSeriesMap(posts);
-  return [...seriesMap.values()].map((s) => ({
-    params: { series: s.name },
-    props: { series: s },
-  }));
+  return [...getSeriesMap(posts).values()].map((s) => ({ params: { series: s.name }, props: { series: s } }));
 }
 
 const { series } = Astro.props as { series: SeriesInfo };
-const updated = series.latest.toISOString().slice(0, 10);
+const listed = getListedPosts(await getPublishedPosts());
+// 未列出的系列：这一页只给已经进来的读者看，侧栏不放公开标签
+const hidden = !series.posts.some((p) => listed.includes(p));
+const first = series.posts[0];
 ---
 
-<BaseLayout title={`系列 · ${series.name}`} description={series.description}>
-  <section id="blog">
-    <div class="series-head">
-      <a href="/blog" class="series-back" data-cursor>← 墨痕</a>
-      <span class="series-badge">系列合集</span>
+<DocsLayout title={`系列 · ${series.name}`} description={series.description} tags={hidden ? undefined : navTags(listed)} series={navSeries(listed, series)} activeSeries={series.name} index>
+  <div class="pi-head">
+    <h1>{series.name}</h1>
+    <p>{series.description}</p>
+    <div class="pi-sum">
+      <a class="tlink" href={`/blog/${first.id}`}>从第一篇开始 <Arrow /></a>
+      <span>共 {series.count} 篇</span>
     </div>
-    {series.cover && (
-      <div class="series-banner series-banner-lg" aria-hidden="true">
-        <img src={series.cover} alt="" />
-      </div>
-    )}
-    <h2 class="gs-title" style="margin-top:0.6rem">{series.name}</h2>
-    <p class="series-head-desc">{series.description}</p>
-    <p class="series-head-meta">共 {series.count} 篇 · 更新于 {updated}</p>
-    <div class="gs-stagger">
-      {series.posts.map((p, i) => (
-        <div class="series-item">
-          <span class="series-item-no">{String(i + 1).padStart(2, "0")}</span>
-          <div class="series-item-body">
-            <PostCard
-              href={`/blog/${p.id}`}
-              title={p.data.title}
-              date={p.data.date}
-              description={p.data.description}
-              tags={p.data.tags}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  </section>
-</BaseLayout>
+  </div>
+  <PostIndex posts={series.posts} ordered />
+</DocsLayout>

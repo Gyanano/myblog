@@ -1,23 +1,14 @@
 ---
-import { getPublishedPosts, getFeedItems, PAGE_SIZE, totalPages } from "../../lib/blog";
-import BaseLayout from "../../layouts/BaseLayout.astro";
-import FeedList from "../../components/FeedList.astro";
-import TagBar from "../../components/TagBar.astro";
-import Pager from "../../components/Pager.astro";
-import Search from "../../components/Search.astro";
+import { getPublishedPosts, getListedPosts, navTags, navSeries } from "../../lib/blog";
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import PostIndex from "../../components/PostIndex.astro";
+import NineGate from "../../components/NineGate.astro";
 
-const posts = await getPublishedPosts();
-const feed = getFeedItems(posts); // 系列折叠后的列表流
-const pageItems = feed.slice(0, PAGE_SIZE);
-const total = totalPages(feed.length);
+const posts = getListedPosts(await getPublishedPosts());
 ---
 
-<BaseLayout title="墨痕" description="文章与笔记">
-  <section id="blog">
-    <h2 class="gs-title">墨痕 / 文章</h2>
-    <Search />
-    <TagBar posts={posts} />
-    <FeedList items={pageItems} />
-    <Pager current={1} total={total} />
-  </section>
-</BaseLayout>
+<DocsLayout title="文章" description="文章与笔记" tags={navTags(posts)} series={navSeries(posts)} all index>
+  <h1 class="sr">文章</h1>
+  <PostIndex posts={posts} />
+  <NineGate />
+</DocsLayout>

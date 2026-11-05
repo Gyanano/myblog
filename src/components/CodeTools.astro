@@ -1,0 +1,37 @@
+<script>
+  // 给正文代码块加语言标记和复制按钮。无脚本时代码块照常显示。
+  function init() {
+    document.querySelectorAll<HTMLPreElement>(".prose pre").forEach((pre) => {
+      if (pre.parentElement?.classList.contains("cb")) return;
+      const box = document.createElement("div");
+      box.className = "cb";
+      pre.before(box);
+      box.append(pre);
+      const lang = pre.dataset.language;
+      if (lang && lang !== "plaintext" && lang !== "text") {
+        const tag = document.createElement("span");
+        tag.className = "cb-lang";
+        tag.textContent = lang;
+        box.append(tag);
+      }
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cb-btn";
+      btn.textContent = "复制";
+      btn.setAttribute("aria-label", "复制这段代码");
+      let timer = 0;
+      btn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(pre.querySelector("code")?.innerText ?? pre.innerText);
+          btn.textContent = "已复制";
+        } catch {
+          btn.textContent = "复制失败";
+        }
+        clearTimeout(timer);
+        timer = window.setTimeout(() => { btn.textContent = "复制"; }, 1600);
+      });
+      box.append(btn);
+    });
+  }
+  document.addEventListener("astro:page-load", init);
+</script>

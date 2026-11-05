@@ -1,0 +1,75 @@
+---
+import SearchButton from "./SearchButton.astro";
+import type { DocsGroup } from "../lib/blog";
+interface Props {
+  groups?: DocsGroup[]; // 系列文章：列出本系列的章节
+  tags?: { tag: string; count: number }[];
+  series?: { name: string; count: number }[];
+  currentId?: string;
+  activeTag?: string;
+  activeSeries?: string;
+  all?: boolean;
+}
+const { groups = [], tags = [], series = [], currentId, activeTag, activeSeries, all = false } = Astro.props;
+// 键相同的页面之间，换页时侧栏节点不动，只更新当前项
+const sidebarKey = `${tags.map((t) => t.tag).join()}|${series.map((s) => s.name).join()}|${groups.map((g) => g.key).join()}`;
+---
+
+<aside class="dsb" id="docs-sidebar" aria-label="文章目录" data-lenis-prevent data-sb={sidebarKey}>
+  <SearchButton />
+  <a class="dsb-home" href="/blog" aria-current={all ? "page" : undefined}>全部文章</a>
+  {tags.length > 0 && (
+    <ul class="dsb-tags">
+      {tags.map(({ tag, count }) => (
+        <li>
+          <a href={`/blog/tags/${encodeURIComponent(tag)}`} aria-current={tag === activeTag ? "page" : undefined}><span>{tag}</span><em>{count}</em></a>
+        </li>
+      ))}
+    </ul>
+  )}
+  {series.length > 0 && (
+    <>
+      <p class="dsb-h">系列</p>
+      <ul class="dsb-tags">
+        {series.map(({ name, count }) => (
+          <li>
+            <a href={`/blog/series/${encodeURIComponent(name)}`} aria-current={name === activeSeries ? "page" : undefined}><span>{name}</span><em>{count}</em></a>
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+  {groups.map((g) => (
+    <section class="dsb-sec">
+      <a class="dsb-head" href={g.href}><span>{g.label}</span><em>{g.items.length}</em></a>
+      <ul>
+        {g.items.map((p) => (
+          <li>
+            <a href={`/blog/${p.id}`} aria-current={p.id === currentId ? "page" : undefined}>{p.data.title}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</aside>
+
+<script>
+  const norm = (p: string) => p.replace(/\/$/, "") || "/";
+
+  function sync() {
+    const side = document.getElementById("docs-sidebar");
+    if (!side) return;
+    const path = norm(location.pathname);
+    side.querySelectorAll<HTMLAnchorElement>("a").forEach((a) => {
+      if (norm(new URL(a.href).pathname) === path) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+    const cur = side.querySelector<HTMLElement>('ul a[aria-current="page"]');
+    if (!cur) return;
+    // 当前项已在可视区时不动，侧栏才不会跳
+    const top = cur.getBoundingClientRect().top - side.getBoundingClientRect().top;
+    if (top < 0 || top + cur.offsetHeight > side.clientHeight) side.scrollTop += top - side.clientHeight / 2;
+  }
+  document.addEventListener("astro:after-swap", sync);
+  document.addEventListener("astro:page-load", sync);
+</script>

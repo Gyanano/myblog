@@ -1,0 +1,397 @@
+---
+// 首屏舞台：暗室、手电筒与粒子字标。光锥是 CSS 平面渐变（只旋转，走合成层），
+// 粒子、影子、尘埃画在 canvas 上，并与光锥共用同一个光源与朝向。
+---
+
+<div class="beam-clip" aria-hidden="true"><div class="beam cone" id="beam"></div></div>
+<canvas id="stage" aria-hidden="true"></canvas>
+<slot />
+
+
+<script>
+  import { DPR } from "../lib/dpr";
+  import { KEYWORDS } from "../consts";
+
+  let stop: (() => void) | null = null;
+
+  async function init() {
+    stop?.();
+    const hero = document.getElementById("hero");
+    const c = document.getElementById("stage") as HTMLCanvasElement | null;
+    const beam = document.getElementById("beam");
+    if (!hero || !c || !beam) return;
+    const g = c.getContext("2d")!;
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const root = document.documentElement;
+    const pl = document.getElementById("preloader");
+    const showPl = root.classList.contains("pl-on") && !!pl;
+    let dead = false;
+
+    let W = 0, H = 0, E = 0, n = 0, rmin = 4, boxTop = 0, boxH = 0;
+    let hx = new Float32Array(0), hy = hx, px = hx, py = hx, vx = hx, vy = hx, r0 = hx, kk = hx, ph = hx, pf = hx, fx = hx, fy = hx, rest = hx;
+    let pa = new Int32Array(0), pb = pa;
+    let img: HTMLImageElement | null = null;
+
+    // 粒子亮度分 8 档：从暗室里的余光到被手电照亮的暖白
+    const RAMP = ["#232427", "#34353a", "#4b4c50", "#6d6c6c", "#979388", "#c4bdab", "#e6dec9", "#fff4e2"];
+    const buckets = RAMP.map(() => [] as number[]);
+    const greens: number[] = [];
+
+    function sample(boxW: number) {
+      const o = document.createElement("canvas");
+      const bw = Math.round(boxW), bh = Math.round(boxH);
+      o.width = bw; o.height = bh;
+      const x = o.getContext("2d", { willReadFrequently: true })!;
+      x.drawImage(img!, 0, 0, bw, bh);
+      const d = x.getImageData(0, 0, bw, bh).data;
+      const f = new Uint8Array(bw * bh);
+      let ink = 0;
+      for (let i = 0; i < f.length; i++) { f[i] = d[i * 4]; if (f[i] > 128) ink++; }
+      return { f, ink, bw, bh };
+    }
+
+    function build() {
+      const d = DPR();
+      W = hero!.clientWidth; H = hero!.clientHeight;
+      const wide = W > H;
+      const side = wide ? W * 0.008 : W * 0.06;
+      const boxW = W - side * 2;
+      boxH = (boxW * img!.naturalHeight) / img!.naturalWidth;
+      // 宽屏让字标的下行笔画出血到屏外，竖屏保持完整
+      boxTop = wide ? H - boxH * 0.86 : H - boxH - H * 0.05;
+      // 画布比首屏高一截：y 的下行笔画在首屏外完整画出，滚动时接进下一节，不被切断
+      E = Math.ceil(Math.max(0, boxTop + boxH - H)) + 28;
+      c!.width = W * d; c!.height = (H + E) * d;
+      c!.style.height = H + E + "px";
+      g.setTransform(d, 0, 0, d, 0, 0);
+      const { f, ink, bw, bh } = sample(boxW);
+      const target = W < 800 ? 3200 : 9000;
+      rmin = Math.max(2.2, Math.sqrt((ink * 0.72) / target));
+      const lum = (x: number, y: number) => (x < 0 || y < 0 || x >= bw || y >= bh ? 0 : f[(y | 0) * bw + (x | 0)] / 255);
+
+      // 泊松圆盘采样：粒子不规则，但保持最小间距
+      const cs = rmin / Math.SQRT2, gW = Math.ceil(bw / cs) + 1, gH = Math.ceil(bh / cs) + 1;
+      const grid = new Int32Array(gW * gH).fill(-1);
+      const pts: number[] = [];
+      const ok = (x: number, y: number) => {
+        const gx = (x / cs) | 0, gy = (y / cs) | 0;
+        for (let yy = Math.max(0, gy - 2); yy <= Math.min(gH - 1, gy + 2); yy++)
+          for (let xx = Math.max(0, gx - 2); xx <= Math.min(gW - 1, gx + 2); xx++) {
+            const q = grid[yy * gW + xx];
+            if (q >= 0) { const dx = pts[q * 2] - x, dy = pts[q * 2 + 1] - y; if (dx * dx + dy * dy < rmin * rmin) return false; }
+          }
+        return true;
+      };
+      const active: number[] = [];
+      const add = (x: number, y: number) => { grid[((y / cs) | 0) * gW + ((x / cs) | 0)] = pts.length / 2; active.push(pts.length / 2); pts.push(x, y); };
+      // 先沿字形轮廓布点，让字母边缘清晰，再填内部
+      const edge: number[] = [];
+      const st = Math.max(1, Math.round(rmin * 0.5));
+      for (let y = st; y < bh - st; y += st) for (let x = st; x < bw - st; x += st) {
+        if (lum(x, y) < 0.6) continue;
+        if (lum(x - st, y) < 0.5 || lum(x + st, y) < 0.5 || lum(x, y - st) < 0.5 || lum(x, y + st) < 0.5) edge.push(x, y);
+      }
+      for (let i = edge.length / 2 - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [edge[i * 2], edge[j * 2]] = [edge[j * 2], edge[i * 2]]; [edge[i * 2 + 1], edge[j * 2 + 1]] = [edge[j * 2 + 1], edge[i * 2 + 1]]; }
+      for (let i = 0; i < edge.length; i += 2) if (ok(edge[i], edge[i + 1])) add(edge[i], edge[i + 1]);
+      for (let s = 0; s < 1200; s++) {
+        const x = Math.random() * bw, y = Math.random() * bh;
+        if (lum(x, y) < 0.6 || !ok(x, y)) continue;
+        add(x, y);
+        while (active.length) {
+          const ai = (Math.random() * active.length) | 0, q = active[ai];
+          let found = false;
+          for (let t = 0; t < 18; t++) {
+            const a = Math.random() * 6.283, rad = rmin * (1 + Math.random());
+            const x2 = pts[q * 2] + Math.cos(a) * rad, y2 = pts[q * 2 + 1] + Math.sin(a) * rad;
+            if (lum(x2, y2) < 0.45 || !ok(x2, y2)) continue;
+            add(x2, y2); found = true; break;
+          }
+          if (!found) { active[ai] = active[active.length - 1]; active.pop(); }
+        }
+      }
+      n = pts.length / 2;
+      hx = new Float32Array(n); hy = new Float32Array(n); px = new Float32Array(n); py = new Float32Array(n);
+      vx = new Float32Array(n); vy = new Float32Array(n); r0 = new Float32Array(n); kk = new Float32Array(n);
+      ph = new Float32Array(n); pf = new Float32Array(n); fx = new Float32Array(n); fy = new Float32Array(n);
+      for (let m = 0; m < n; m++) {
+        const lx = pts[m * 2], ly = pts[m * 2 + 1];
+        hx[m] = side + lx; hy[m] = boxTop + ly;
+        const a = Math.random() * 6.283, rr = rmin * (2 + Math.random() * 10);
+        px[m] = hx[m] + Math.cos(a) * rr; py[m] = hy[m] + Math.sin(a) * rr * 0.7;
+        r0[m] = rmin * 0.46 * (Math.random() < 0.12 ? 1.25 : 0.62 + Math.random() * 0.42);
+        kk[m] = hx[m] / W;
+        ph[m] = Math.random() * 6.283; pf[m] = 0.5 + Math.random() * 0.9;
+      }
+      // 邻居对：按「家」的距离一次算好，运行时不再做空间查询
+      const cut = rmin * 1.9, gs = cut, cw = Math.ceil(W / gs) + 1, ch = Math.ceil(H / gs) + 1;
+      const heads = new Int32Array(cw * ch).fill(-1), nxt = new Int32Array(n);
+      for (let i = 0; i < n; i++) { const b = ((hy[i] / gs) | 0) * cw + ((hx[i] / gs) | 0); nxt[i] = heads[b]; heads[b] = i; }
+      const A: number[] = [], B: number[] = [], Rs: number[] = [];
+      for (let i = 0; i < n; i++) {
+        const cx = (hx[i] / gs) | 0, cy = (hy[i] / gs) | 0;
+        for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+          const gx = cx + ox, gy = cy + oy;
+          if (gx < 0 || gy < 0 || gx >= cw || gy >= ch) continue;
+          for (let j = heads[gy * cw + gx]; j !== -1; j = nxt[j]) {
+            if (j <= i) continue;
+            const dx = hx[j] - hx[i], dy = hy[j] - hy[i], dd = dx * dx + dy * dy;
+            if (dd < cut * cut) { A.push(i); B.push(j); Rs.push(Math.sqrt(dd)); }
+          }
+        }
+      }
+      pa = Int32Array.from(A); pb = Int32Array.from(B); rest = Float32Array.from(Rs);
+      placeBeam();
+      makeWall();
+    }
+
+    // ── 光 ──
+    let Sx = 0, Sy = 0, aim = 0.9, aimT = 0.9, lastMove = -1e6, mx = -1e4, my = -1e4, inside = false;
+    const HALF = 0.235, SOFT = 0.05;
+    function placeBeam() {
+      Sx = -W * 0.05; Sy = -H * 0.26;
+      const R = Math.hypot(W + Math.abs(Sx), H + Math.abs(Sy)) * 1.12;
+      beam!.style.width = beam!.style.height = R * 2 + "px";
+      beam!.style.left = Sx + "px"; beam!.style.top = Sy + "px";
+    }
+    const lit = (x: number, y: number) => {
+      const dx = x - Sx, dy = y - Sy, dist = Math.sqrt(dx * dx + dy * dy);
+      let da = Math.atan2(dy, dx) - aim;
+      if (da > Math.PI) da -= 6.2832; else if (da < -Math.PI) da += 6.2832;
+      let q = (HALF + SOFT - Math.abs(da)) / (2 * SOFT);
+      q = q <= 0 ? 0 : q >= 1 ? 1 : q * q * (3 - 2 * q);
+      const f = 1 / (1 + (dist / (Math.hypot(W, H) * 0.92)) ** 2);
+      return q * f;
+    };
+
+
+    // ── 墙上的水印：关键词随机散布、缓慢漂浮，平时看不见，只有光锥扫过才显现 ──
+    type Tag = { img: HTMLCanvasElement; w: number; h: number; x: number; y: number; ph: number; f: number };
+    let tags: Tag[] = [], wTop = 0, wH = 0;
+    const FONT = '"Hanken Grotesk", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif';
+    function makeWall() {
+      const d = DPR(), M = W * 0.06, base = Math.min(W > H ? W * 0.062 : W * 0.115, 96), DRIFT = 12;
+      wTop = 78; wH = Math.max(120, boxTop - wTop - 24);
+      // 由大到小放置，矩形不重叠；每次加载的布局都不同
+      const sizes = KEYWORDS.map((_, i) => base * (i < 3 ? 1 : i < 6 ? 0.62 : 0.42));
+      const placed: Tag[] = [];
+      KEYWORDS.forEach((word, i) => {
+        const fs = sizes[i], o = document.createElement("canvas"), x = o.getContext("2d")!;
+        x.font = `700 ${fs * d}px ${FONT}`;
+        const w = Math.ceil(x.measureText(word).width / d), h = Math.ceil(fs * 1.25);
+        o.width = w * d; o.height = h * d;
+        x.font = `700 ${fs * d}px ${FONT}`;
+        x.fillStyle = "#fff1dc"; x.textBaseline = "middle";
+        x.fillText(word, 0, (h * d) / 2);
+        for (let t = 0; t < 200; t++) {
+          const px = M + Math.random() * Math.max(0, W - M * 2 - w), py = wTop + Math.random() * Math.max(0, wH - h);
+          const g2 = W > H ? fs * 0.5 + DRIFT * 2 : fs * 0.2 + DRIFT;
+          if (placed.some((q) => px < q.x + q.w + g2 && px + w + g2 > q.x && py < q.y + q.h + g2 && py + h + g2 > q.y)) continue;
+          placed.push({ img: o, w, h, x: px, y: py, ph: Math.random() * 6.283, f: 0.00022 + Math.random() * 0.00022 });
+          break;
+        }
+      });
+      tags = placed;
+    }
+    function drawWall(lamp: number, t: number) {
+      if (!tags.length || lamp <= 0) return;
+      g.save();
+      g.beginPath();
+      g.rect(0, wTop - 16, W, wH + 32);
+      g.clip();
+      g.globalAlpha = 0.34 * lamp;
+      for (const q of tags) g.drawImage(q.img, q.x + Math.sin(t * q.f + q.ph) * 12, q.y + Math.cos(t * q.f * 0.8 + q.ph) * 12, q.w, q.h);
+      g.globalAlpha = 1;
+      // 只留光锥内的部分，边缘与 CSS 光锥同宽；离光源越远越暗，与 lit() 的衰减一致
+      const span = (HALF + SOFT) * 2, T = 6.2832, e = (SOFT * 2) / T;
+      const cone = g.createConicGradient(aim - HALF - SOFT, Sx, Sy);
+      cone.addColorStop(0, "rgba(0,0,0,0)");
+      cone.addColorStop(e, "#000");
+      cone.addColorStop(span / T - e, "#000");
+      cone.addColorStop(span / T, "rgba(0,0,0,0)");
+      g.globalCompositeOperation = "destination-in";
+      g.fillStyle = cone;
+      g.fillRect(0, 0, W, H);
+      const R = Math.hypot(W, H) * 1.5, fall = g.createRadialGradient(Sx, Sy, 0, Sx, Sy, R);
+      fall.addColorStop(0, "#000");
+      fall.addColorStop(0.45, "rgba(0,0,0,.72)");
+      fall.addColorStop(1, "rgba(0,0,0,.2)");
+      g.fillStyle = fall;
+      g.fillRect(0, 0, W, H);
+      g.restore();
+    }
+
+    // 手电开灯的闪烁
+    const flick = (ms: number) => (ms < 0 ? 0 : ms < 70 ? 0.75 : ms < 150 ? 0.08 : ms < 260 ? 1 : ms < 340 ? 0.28 : ms < 620 ? 0.92 : 1);
+
+    // ── 尘埃：只有落在光锥里才看得见 ──
+    let dust: { x: number; y: number; z: number; s: number }[] = [];
+    function makeDust() {
+      dust = Array.from({ length: W < 800 ? 70 : 170 }, () => ({ x: Math.random() * W, y: Math.random() * H, z: 0.4 + Math.random() * 0.6, s: Math.random() * 6.283 }));
+    }
+
+    const K_HOME = 0.052, K_REP = 0.11, K_ATT = 0.034, DAMP = 0.85;
+    function step(a: number, t: number) {
+      const R = rmin * 24, kM = rmin * 0.2, drift = rmin * 0.34, kT = rmin * 0.02, w0 = t * 0.001;
+      for (let i = 0; i < n; i++) {
+        const on = Math.min(1, Math.max(0, (a * 1.7 - kk[i]) / 0.7));
+        const k = K_HOME * (0.15 + on * 0.85);
+        const w = w0 * pf[i] + ph[i];
+        let ax = (hx[i] + Math.sin(w) * drift - px[i]) * k + (Math.random() - 0.5) * kT;
+        let ay = (hy[i] + Math.cos(w * 0.83) * drift - py[i]) * k + (Math.random() - 0.5) * kT;
+        const dx = px[i] - mx, dy = py[i] - my, d2 = dx * dx + dy * dy;
+        if (d2 < R * R) { const d = Math.sqrt(d2) || 0.01, q = 1 - d / R; ax += (dx / d) * kM * q * q; ay += (dy / d) * kM * q * q; }
+        fx[i] = ax; fy[i] = ay;
+      }
+      for (let e = 0; e < pa.length; e++) {
+        const i = pa[e], j = pb[e], dx = px[j] - px[i], dy = py[j] - py[i], d = Math.sqrt(dx * dx + dy * dy) || 0.01, s = d - rest[e];
+        const m = (s < 0 ? K_REP : K_ATT) * s / d;
+        fx[i] += dx * m; fy[i] += dy * m; fx[j] -= dx * m; fy[j] -= dy * m;
+      }
+      for (let i = 0; i < n; i++) { vx[i] = (vx[i] + fx[i]) * DAMP; vy[i] = (vy[i] + fy[i]) * DAMP; px[i] += vx[i]; py[i] += vy[i]; }
+    }
+
+    function draw(a: number, lamp: number, t: number) {
+      g.clearRect(0, 0, W, H + E);
+      drawWall(lamp, t);
+      for (const b of buckets) b.length = 0;
+      greens.length = 0;
+      // 影子：被照亮的粒子朝背离光源的方向投影，离光源越远影子越长
+      g.fillStyle = "rgba(0,0,0,0.5)";
+      g.beginPath();
+      for (let i = 0; i < n; i++) {
+        const p = Math.min(1, Math.max(0, (a * 1.7 - kk[i]) / 0.7));
+        if (p <= 0) continue;
+        const L = lit(px[i], py[i]) * lamp;
+        const lv = 0.2 + L * 1.5;
+        const disp = Math.abs(px[i] - hx[i]) + Math.abs(py[i] - hy[i]);
+        const bk = lv >= 1 ? 7 : (lv * 8) | 0;
+        if (disp > rmin * 1.8) greens.push(i); else buckets[bk].push(i);
+        if (L > 0.1 && !lowQ) {
+          const dx = px[i] - Sx, dy = py[i] - Sy, d = Math.sqrt(dx * dx + dy * dy), r = r0[i] * p, len = (r * 0.6 + (d / Math.hypot(W, H)) * rmin * 4.2) / d;
+          const sx = px[i] + dx * len, sy = py[i] + dy * len;
+          g.moveTo(sx + r, sy); g.arc(sx, sy, r, 0, 6.2832);
+        }
+      }
+      g.fill();
+      for (let b = 0; b < 8; b++) {
+        const list = buckets[b];
+        if (!list.length) continue;
+        g.fillStyle = RAMP[b];
+        g.beginPath();
+        for (let k = 0; k < list.length; k++) { const i = list[k], p = Math.min(1, Math.max(0, (a * 1.7 - kk[i]) / 0.7)), r = r0[i] * p; g.moveTo(px[i] + r, py[i]); g.arc(px[i], py[i], r, 0, 6.2832); }
+        g.fill();
+      }
+      if (greens.length) {
+        g.fillStyle = "#5fd4a0";
+        g.beginPath();
+        for (const i of greens) { const r = r0[i]; g.moveTo(px[i] + r, py[i]); g.arc(px[i], py[i], r, 0, 6.2832); }
+        g.fill();
+      }
+      // 尘埃
+      for (const m of dust) {
+        m.x += Math.sin(t * 0.00017 + m.s) * 0.16 * m.z + 0.05; m.y += Math.cos(t * 0.00013 + m.s * 2) * 0.12 * m.z - 0.02;
+        if (m.x > W) m.x = 0; if (m.x < 0) m.x = W; if (m.y > H) m.y = 0; if (m.y < 0) m.y = H;
+        const L = lit(m.x, m.y) * lamp;
+        if (L < 0.08) continue;
+        g.globalAlpha = Math.min(0.75, L * 1.1) * (0.35 + 0.65 * Math.abs(Math.sin(t * 0.0009 + m.s)));
+        g.fillStyle = "#fff1dc";
+        g.beginPath(); g.arc(m.x, m.y, 0.35 + m.z * 0.6, 0, 6.2832); g.fill();
+      }
+      g.globalAlpha = 1;
+    }
+
+    let appearAt = -1, flickAt = -1, visible = true, running = false, raf = 0, last = 0, ema = 16, lowQ = false;
+    const appear = (t: number) => (reduced ? 1 : Math.min(1, (t - appearAt) / 1500));
+    function aimAt(t: number) {
+      let tx: number, ty: number;
+      if (inside && t - lastMove < 2600) { tx = mx; ty = my; }
+      else { tx = W * (0.6 + 0.3 * Math.sin(t * 0.00019)); ty = boxTop + boxH * 0.32; }
+      aimT = Math.atan2(ty - Sy, tx - Sx);
+      aim += (aimT - aim) * 0.06;
+      beam!.style.transform = `translate(-50%, -50%) rotate(${(aim * 57.2958 + 90).toFixed(2)}deg)`;
+    }
+    function frame(t: number) {
+      raf = 0;
+      if (dead || !visible || document.hidden) { running = false; return; }
+      if (appearAt >= 0) {
+        const a = appear(t), lamp = flick(t - flickAt);
+        beam!.style.opacity = String(lamp);
+        aimAt(t);
+        const dt = t - last;
+        if (dt < 200) { ema += (dt - ema) * 0.05; if (ema > 27) lowQ = true; }
+        step(a, t); if (dt > 26 && !lowQ) step(a, t);
+        draw(a, lamp, t);
+      }
+      last = t;
+      raf = requestAnimationFrame(frame);
+    }
+    const start = () => { if (!running && !reduced) { running = true; raf = requestAnimationFrame(frame); } };
+
+    const onMove = (e: PointerEvent) => {
+      const r = hero!.getBoundingClientRect();
+      mx = e.clientX - r.left; my = e.clientY - r.top; inside = true; lastMove = performance.now();
+    };
+    const onLeave = () => { mx = my = -1e4; inside = false; };
+    let rt = 0;
+    const onResize = () => { clearTimeout(rt); rt = window.setTimeout(() => { if (Math.abs(hero!.clientWidth - W) < 2) return; build(); makeDust(); if (reduced) still(); }, 160); };
+    const still = () => {
+      for (let i = 0; i < n; i++) { px[i] = hx[i]; py[i] = hy[i]; }
+      aim = Math.atan2(boxTop + boxH * 0.3 - Sy, W * 0.66 - Sx);
+      beam!.style.transform = `translate(-50%, -50%) rotate(${(aim * 57.2958 + 90).toFixed(2)}deg)`;
+      beam!.style.opacity = "1"; draw(1, 1, 0);
+    };
+    const onVis = () => { if (!document.hidden) start(); };
+    hero.addEventListener("pointermove", onMove);
+    hero.addEventListener("pointerleave", onLeave);
+    window.addEventListener("resize", onResize);
+    document.addEventListener("visibilitychange", onVis);
+    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; beam!.style.visibility = visible ? "visible" : "hidden"; if (visible) start(); }, { rootMargin: "240px 0px" });
+    io.observe(hero);
+    stop = () => {
+      dead = true; cancelAnimationFrame(raf); running = false; io.disconnect(); clearTimeout(rt);
+      hero!.removeEventListener("pointermove", onMove); hero!.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("resize", onResize); document.removeEventListener("visibilitychange", onVis);
+    };
+
+    // 加载：遮罩图是唯一的前置资源；进度最短 1.1 秒，随后「开灯」
+    const t0 = performance.now();
+    let ready = false;
+    const pick = matchMedia("(max-aspect-ratio: 1/1)").matches ? "/hero-mask-m.png" : "/hero-mask.png";
+    // 字体就绪后重排水印，避免首帧用回退字体量宽
+    document.fonts.load('700 40px "Hanken Grotesk"').then(() => { if (!dead && img) { makeWall(); if (reduced && appearAt >= 0) draw(1, 1, 0); } }).catch(() => {});
+    const im = new Image();
+    im.src = pick;
+    im.decode().then(() => { if (dead) return; img = im; build(); makeDust(); }).catch(() => {}).finally(() => { ready = true; });
+    setTimeout(() => { ready = true; }, 6000); // 网络卡住时也不让加载层一直挡着
+    const bar = document.getElementById("pl-bar"), num = document.getElementById("pl-num");
+    let shown = 0;
+    await new Promise<void>((res) => {
+      if (!showPl) { (function w() { if (ready || dead) res(); else setTimeout(w, 16); })(); return; }
+      (function tick() {
+        if (dead) return res();
+        const el = performance.now() - t0, go = ready && el > 1100;
+        const target = go ? 100 : Math.min(86, 10 + el / 18);
+        shown += (target - shown) * (go ? 0.22 : 0.1);
+        if (go && shown > 99.4) shown = 100;
+        if (bar) bar.style.transform = `scaleX(${shown / 100})`;
+        if (num) num.textContent = String(Math.round(shown));
+        if (shown >= 100) return res();
+        requestAnimationFrame(tick);
+      })();
+    });
+    if (dead) return;
+    if (showPl && pl) {
+      pl.classList.add("go");
+      try { sessionStorage.setItem("pl", "1"); } catch {}
+      setTimeout(() => { root.classList.remove("pl-on"); pl.classList.remove("go"); }, 1000);
+    }
+    if (!img) { beam.style.opacity = "1"; return; } // 遮罩加载失败：保留光锥，跳过粒子
+    if (reduced) { appearAt = 0; still(); return; }
+    const now = performance.now();
+    aim = Math.atan2(boxTop + boxH * 0.5 - Sy, W * 0.3 - Sx);
+    appearAt = now + (showPl ? 260 : 0); flickAt = appearAt + 180;
+    start();
+  }
+  document.addEventListener("astro:page-load", init);
+  document.addEventListener("astro:before-swap", () => { stop?.(); stop = null; });
+</script>

@@ -1,29 +1,182 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ProjectCard from "../components/ProjectCard.astro";
-import { PROJECTS } from "../consts";
+import WorkCover from "../components/WorkCover.astro";
+import Arrow from "../components/Arrow.astro";
+import { getProjects, getWorks } from "../lib/portfolio";
+import { SITE } from "../consts";
+
+const works = await getWorks();
+const projects = await getProjects();
 ---
 
-<BaseLayout title="术" description="精选项目">
-  <section id="work">
-    <h2 class="gs-title">术 / 实践</h2>
-    <p
-      class="gs-stagger"
-      style="border-left:2px solid var(--cinnabar);padding-left:1rem;font-family:var(--font-calligraphy);font-size:1.6rem;color:var(--ink-dark)"
-    >
-      大音希声，大象无形。<br />
-      <span style="font-family:var(--font-serif);font-size:1rem;color:var(--ink-light)">
-        设计的最高境界，是隐藏设计本身的痕迹。
-      </span>
-    </p>
-    {PROJECTS.length === 0 ? (
-      <p class="gs-stagger" style="color:var(--ink-light);font-family:var(--font-mono)">
-        &gt; 项目整理中…
-      </p>
-    ) : (
-      <ul class="works-list gs-stagger">
-        {PROJECTS.map((p) => <ProjectCard project={p} />)}
-      </ul>
-    )}
-  </section>
+<BaseLayout title="作品" description="作品集与开源项目">
+  <h1 class="sr">作品</h1>
+
+  {works.length === 0 ? (
+    <p class="wg-empty">作品整理中。</p>
+  ) : (
+    <section class="wg" aria-label="作品集">
+      <div class="wg-air" aria-hidden="true"></div>
+      <div class="wg-dark" aria-hidden="true"></div>
+      <ol class="wg-list">
+        {works.map(({ data: w }, i) => {
+          const href = w.link || w.repo;
+          return (
+            <li class="wp">
+              <div class="wp-cov">
+                {href ? (
+                  <a class="wp-shot" href={href} target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
+                    <WorkCover title={w.title} cover={w.cover} eager={i === 0} />
+                  </a>
+                ) : (
+                  <div class="wp-shot"><WorkCover title={w.title} cover={w.cover} eager={i === 0} /></div>
+                )}
+                {w.images?.length ? (
+                  <div class="wp-imgs">{w.images.map((src) => <img src={src} alt={`${w.title} 图片`} loading="lazy" decoding="async" />)}</div>
+                ) : null}
+              </div>
+              <div class="wp-txt">
+                <h2>{w.title}</h2>
+                <p>{w.summary}</p>
+                {w.tags?.length ? <div class="stack">{w.tags.join("  ·  ")}</div> : null}
+                {w.link && <a class="tlink" href={w.link} target="_blank" rel="noopener">查看作品 <Arrow dir="out" /></a>}
+                {!w.link && w.repo && <a class="tlink" href={w.repo} target="_blank" rel="noopener">查看代码 <Arrow dir="out" /></a>}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  )}
+
+  {projects.length > 0 && (
+    <section class="gh" aria-labelledby="gh-h">
+      <h2 class="writing-h" id="gh-h">GitHub 项目</h2>
+      <ol class="gh-list">
+        {projects.map((p) => <ProjectCard project={p} />)}
+      </ol>
+      <a class="tlink gh-more" href={SITE.github} target="_blank" rel="noopener">更多 <Arrow dir="out" /></a>
+    </section>
+  )}
 </BaseLayout>
+
+<script>
+  // 作品页的光：同一个光源，朝向由滚动位置决定，指针只把它带偏一点。
+  // 朝向是滚动的纯函数，再做一次低通，所以快滚和回滚都不会跳。
+  const DEG = 180 / Math.PI;
+  const clamp = (v: number) => Math.min(1, Math.max(0, v));
+  const smooth = (v: number) => v * v * (3 - 2 * v);
+  let stop: (() => void) | null = null;
+
+  function init() {
+    stop?.();
+    stop = null;
+    const air = document.querySelector<HTMLElement>(".wg-air");
+    const dark = document.querySelector<HTMLElement>(".wg-dark");
+    const list = document.querySelector<HTMLElement>(".wg-list");
+    const shots = [...document.querySelectorAll<HTMLElement>(".wp-shot")];
+    if (!air || !dark || !list || !shots.length) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let W = 0, H = 0, Sx = 0, Sy = 0;
+    let pts: { x: number; y: number; b: number }[] = [];
+    const measure = () => {
+      W = innerWidth;
+      H = innerHeight;
+      // 光源比首页放得更远，光斑才盖得住整幅封面
+      Sx = (W > 960 ? -0.1 : -0.06) * W;
+      Sy = (W > 960 ? -0.5 : -0.62) * H;
+      pts = shots.map((s) => {
+        const r = s.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + scrollY + r.height / 2, b: r.bottom + scrollY };
+      });
+      for (const el of [air, dark]) {
+        el.style.setProperty("--sx", `${Sx}px`);
+        el.style.setProperty("--sy", `${Sy}px`);
+      }
+    };
+
+    let px: number | null = null, py = 0;
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      px = e.clientX;
+      py = e.clientY;
+    };
+    const onLeave = () => { px = null; };
+
+    // 目标：离视口中线最近的封面。两幅之间的前 30% 和后 30% 停在封面上，中段才摆过去
+    const targetAngle = () => {
+      const y = scrollY, c = y + H * 0.5;
+      let i = 0;
+      while (i < pts.length - 1 && c > pts[i + 1].y) i++;
+      const a = pts[i], b = pts[i + 1] ?? a;
+      const u = b === a ? 0 : smooth(clamp(((c - a.y) / (b.y - a.y) - 0.3) / 0.4));
+      let tx = a.x + (b.x - a.x) * u;
+      let ty = a.y + (b.y - a.y) * u - y;
+      if (px !== null) {
+        tx += (px - tx) * 0.25;
+        ty += (py - ty) * 0.25;
+      }
+      return Math.atan2(tx - Sx, Sy - ty) * DEG;
+    };
+
+    measure();
+    const t0 = performance.now();
+    let ang = targetAngle() + 34; // 入场：光从左边墙根摆到第一幅作品上
+    let shown = -999, shownE = -1, last = t0, raf = 0, inView = true;
+
+    const frame = (now: number) => {
+      raf = 0;
+      if (!inView) return;
+      const dt = Math.min(now - last, 64);
+      last = now;
+      ang += (targetAngle() - ang) * (1 - Math.exp(-dt / (now - t0 < 1300 ? 420 : 170)));
+      if (Math.abs(ang - shown) > 0.02) {
+        shown = ang;
+        const v = `${ang.toFixed(2)}deg`;
+        air.style.setProperty("--a", v);
+        dark.style.setProperty("--a", v);
+      }
+      // 走过最后一幅后，暗层和光束一起退场，下面的内容不受影响
+      const e = smooth(clamp((pts[pts.length - 1].b - scrollY - H * 0.22) / (H * 0.4)));
+      if (Math.abs(e - shownE) > 0.004) {
+        shownE = e;
+        air.style.opacity = dark.style.opacity = e.toFixed(3);
+      }
+      raf = requestAnimationFrame(frame);
+    };
+    const start = () => {
+      if (!raf) {
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+    };
+
+    const io = new IntersectionObserver((e) => {
+      inView = e[e.length - 1].isIntersecting;
+      if (inView) start();
+    }, { rootMargin: "20% 0px" });
+    io.observe(list);
+    const ro = new ResizeObserver(measure);
+    ro.observe(list);
+    addEventListener("resize", measure);
+    addEventListener("pointermove", onMove, { passive: true });
+    document.documentElement.addEventListener("pointerleave", onLeave);
+    start();
+
+    stop = () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      inView = false;
+      io.disconnect();
+      ro.disconnect();
+      removeEventListener("resize", measure);
+      removeEventListener("pointermove", onMove);
+      document.documentElement.removeEventListener("pointerleave", onLeave);
+    };
+  }
+
+  document.addEventListener("astro:page-load", init);
+  document.addEventListener("astro:before-swap", () => { stop?.(); stop = null; });
+</script>

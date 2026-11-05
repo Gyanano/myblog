@@ -1,0 +1,7 @@
+title: "dsh-spark-atlas"
+desc: "DeepSeek Harness 插件：私人灵感库放在本地磁盘，风格是真实文件夹，组件是标签。AI 只提议如何整理收件箱，你确认后文件才移动。"
+stack:
+  - "TypeScript"
+  - "DeepSeek Harness"
+repo: "https://github.com/Gyanano/dsh-spark-atlas"
+order: 6

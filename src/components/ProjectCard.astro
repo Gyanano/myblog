@@ -1,40 +1,19 @@
 ---
-import type { Project } from "../consts";
+import Arrow from "./Arrow.astro";
+import type { CollectionEntry } from "astro:content";
 interface Props {
-  project: Project;
+  project: CollectionEntry<"projects">;
 }
-const { project } = Astro.props;
+const { title, desc, stack, repo, image } = Astro.props.project.data;
 ---
 
-<li
-  class="ink-hover"
-  data-seal="技"
-  style="margin-bottom:2.5rem;padding-bottom:2.5rem;border-bottom:1px dashed var(--ink-wash)"
->
-  {project.image && (
-    <div class="project-shot">
-      <img src={project.image} alt={`${project.title} 预览`} loading="lazy" />
+<li>
+  <a class="pr" href={repo} target="_blank" rel="noopener">
+    <h3>{title} <Arrow dir="out" /></h3>
+    <div class="pr-d">
+      <p>{desc}</p>
+      {stack?.length ? <div class="stack">{stack.join("  ·  ")}</div> : null}
     </div>
-  )}
-  <div style="font-family:var(--font-mono);color:var(--ink-light);font-size:0.9rem">
-    &gt; {project.boot}<br />
-    &gt; loading modules: [{project.stack.join(", ")}]<br />
-    &gt; status: <span style="color:var(--cinnabar)">ready</span>
-  </div>
-  <div style="font-family:var(--font-mono);color:var(--ink-light);margin:0.6rem 0 0.2rem;font-size:0.85rem">
-    {project.no} // {project.tag}
-  </div>
-  <h3 style="font-size:1.5rem;font-weight:600;margin:0.3rem 0;color:var(--ink-dark)">
-    {project.title}
-  </h3>
-  <p>{project.desc}</p>
-  <div style="font-family:var(--font-mono);font-size:0.85rem;color:var(--ink-base);margin-bottom:0.6rem">
-    {project.stack.join("  ·  ")}
-  </div>
-  <a
-    href={project.code}
-    data-cursor
-    style="color:var(--cinnabar);font-family:var(--font-mono);text-decoration:none;border-bottom:1px dotted var(--cinnabar)"
-    >Code ↗</a
-  >
+    {image && <img src={image} alt="" loading="lazy" decoding="async" />}
+  </a>
 </li>

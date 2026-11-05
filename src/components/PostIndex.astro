@@ -1,0 +1,48 @@
+---
+// 文章索引：默认按年份分组；ordered 时按给定顺序列出，右侧显示序号（系列的阅读顺序）。
+import type { Post } from "../lib/blog";
+interface Props {
+  posts: Post[];
+  ordered?: boolean;
+}
+const { posts, ordered = false } = Astro.props;
+const years = new Map<number, Post[]>();
+for (const p of posts) {
+  const y = p.data.date.getUTCFullYear();
+  (years.get(y) ?? years.set(y, []).get(y)!).push(p);
+}
+const pad = (n: number) => String(n).padStart(2, "0");
+---
+
+{ordered ? (
+  <ol class="pi-list pi">
+    {posts.map((p, i) => (
+      <li>
+        <a class="pi-a" href={`/blog/${p.id}`}>
+          <span class="pi-t">{p.data.title}</span>
+          <span class="pi-d">{pad(i + 1)}</span>
+          {p.data.description && <p>{p.data.description}</p>}
+        </a>
+      </li>
+    ))}
+  </ol>
+) : (
+  <div class="pi">
+    {[...years].map(([y, list]) => (
+      <section class="pi-y">
+        <h2>{y}</h2>
+        <ol class="pi-list">
+          {list.map((p) => (
+            <li>
+              <a class="pi-a" href={`/blog/${p.id}`}>
+                <span class="pi-t">{p.data.title}</span>
+                <time class="pi-d" datetime={p.data.date.toISOString().slice(0, 10)}>{p.data.date.toISOString().slice(5, 10)}</time>
+                {p.data.description && <p>{p.data.description}</p>}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ))}
+  </div>
+)}

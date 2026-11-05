@@ -1,0 +1,41 @@
+---
+// 文档式布局：左侧栏 + 中间正文 + 右侧本页目录。索引页没有目录，只有两栏。
+import BaseLayout from "./BaseLayout.astro";
+import DocsSidebar from "../components/DocsSidebar.astro";
+import SearchModal from "../components/SearchModal.astro";
+import SearchButton from "../components/SearchButton.astro";
+import type { DocsGroup } from "../lib/blog";
+
+interface Props {
+  title?: string;
+  description?: string;
+  groups?: DocsGroup[];
+  tags?: { tag: string; count: number }[];
+  series?: { name: string; count: number }[];
+  currentId?: string;
+  activeTag?: string;
+  activeSeries?: string;
+  all?: boolean;
+  index?: boolean; // 索引类页面：窄屏时在正文上方显示搜索和标签
+}
+const { title, description, groups, tags, series, currentId, activeTag, activeSeries, all, index = false } = Astro.props;
+const hasAside = Astro.slots.has("aside");
+---
+
+<BaseLayout title={title} description={description} docs>
+  <div class:list={["docs-grid", { two: !hasAside }]}>
+    <DocsSidebar groups={groups} tags={tags} series={series} currentId={currentId} activeTag={activeTag} activeSeries={activeSeries} all={all} />
+    <div class="doc-main">
+      {index && <SearchButton class="search-m" />}
+      {index && tags && (
+        <nav class="tags-m" aria-label="文章标签">
+          <a href="/blog" aria-current={all ? "page" : undefined}>全部</a>
+          {tags.map(({ tag }) => <a href={`/blog/tags/${encodeURIComponent(tag)}`} aria-current={tag === activeTag ? "page" : undefined}>{tag}</a>)}
+        </nav>
+      )}
+      <slot />
+    </div>
+    {hasAside && <div class="doc-aside"><slot name="aside" /></div>}
+  </div>
+  <SearchModal />
+</BaseLayout>

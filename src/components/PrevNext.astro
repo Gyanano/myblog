@@ -1,0 +1,17 @@
+---
+import type { Post } from "../lib/blog";
+import Arrow from "./Arrow.astro";
+interface Props { prev: Post | null; next: Post | null }
+const { prev, next } = Astro.props;
+---
+
+{(prev || next) && (
+  <nav class="prevnext" aria-label="上一篇与下一篇">
+    {prev ? (
+      <a href={`/blog/${prev.id}`} class="pn prev"><small><Arrow dir="left" />上一篇</small><span>{prev.data.title}</span></a>
+    ) : <span></span>}
+    {next ? (
+      <a href={`/blog/${next.id}`} class="pn next"><small>下一篇<Arrow /></small><span>{next.data.title}</span></a>
+    ) : <span></span>}
+  </nav>
+)}

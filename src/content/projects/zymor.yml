@@ -1,0 +1,8 @@
+title: "zymor"
+desc: "为 AI Agent 打造的分层长期记忆系统。记忆库是纯 Markdown 事实源加 SQLite FTS5 索引，可读、可 diff、可迁移；夜间由「做梦」完成巩固、矛盾仲裁与知识升华，支持 MCP 接入。"
+stack:
+  - "Python"
+  - "SQLite FTS5"
+  - "MCP"
+repo: "https://github.com/Gyanano/zymor"
+order: 1

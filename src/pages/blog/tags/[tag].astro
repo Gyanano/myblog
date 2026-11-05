@@ -1,8 +1,7 @@
 ---
-import { getPublishedPosts } from "../../../lib/blog";
-import BaseLayout from "../../../layouts/BaseLayout.astro";
-import PostCard from "../../../components/PostCard.astro";
-import TagBar from "../../../components/TagBar.astro";
+import { getPublishedPosts, getListedPosts, navTags, navSeries, isUnlisted } from "../../../lib/blog";
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import PostIndex from "../../../components/PostIndex.astro";
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();
@@ -15,23 +14,14 @@ export async function getStaticPaths() {
 }
 
 const { tag, tagged } = Astro.props as { tag: string; tagged: Awaited<ReturnType<typeof getPublishedPosts>> };
-const allPosts = await getPublishedPosts();
+// 公开标签页不露出未列出的文章
+const shown = tagged.filter((p) => !isUnlisted(p));
+const list = shown.length ? shown : tagged;
+const listed = getListedPosts(await getPublishedPosts());
+const tags = navTags(listed, shown.length ? tag : undefined);
 ---
 
-<BaseLayout title={`墨痕 · #${tag}`} description={`标签「${tag}」下的文章`}>
-  <section id="blog">
-    <h2 class="gs-title">墨痕 / #{tag}</h2>
-    <TagBar posts={allPosts} active={tag} />
-    <div class="gs-stagger">
-      {tagged.map((p) => (
-        <PostCard
-          href={`/blog/${p.id}`}
-          title={p.data.title}
-          date={p.data.date}
-          description={p.data.description}
-          tags={p.data.tags}
-        />
-      ))}
-    </div>
-  </section>
-</BaseLayout>
+<DocsLayout title={`文章 · #${tag}`} description={`标签「${tag}」下的文章`} tags={tags} series={navSeries(listed)} activeTag={tag} index>
+  <h1 class="sr">{tag}</h1>
+  <PostIndex posts={list} />
+</DocsLayout>
