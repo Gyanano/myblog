@@ -1,16 +1,69 @@
+<canvas id="pt-dots" aria-hidden="true" transition:persist="pt-dots"></canvas>
+
 <script>
-  // 换页转场：点击时内容淡出，同时开始加载；两者都完成后换页，新内容淡入。
+  // 栏目之间：网点从点击处盖满屏幕，同时开始加载；盖满且加载完成后换页，网点再收起。
+  // 同一栏目内：内容淡出，同时开始加载；两者都完成后换页，新内容淡入。
   // 顶栏跨页保留，不参与转场。文章区内部换页时只替换正文和目录，侧栏、顶栏、页脚的节点不动。
   // 从索引点进文章时，点击的标题飞到文章标题的位置。
   import { navigate, swapFunctions } from "astro:transitions/client";
+  import { DPR } from "../lib/dpr";
 
-  const OUT = 200, CLEAR = 760;
+  const OUT = 200, CLEAR = 760, COVER = 210, REVEAL = 270;
   const root = document.documentElement;
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
   const inDocs = (p: string) => p === "/blog" || p.startsWith("/blog/");
   const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let busy = false, delay = false, timer = 0, docMode = false;
+  let busy = false, delay = false, timer = 0, docMode = false, dotMode = false;
+  let covered: Promise<void> = Promise.resolve();
+  let ox = 0.5, oy = 0.5;
   let flip: { rect: DOMRect; size: number; color: string } | null = null;
+
+  const section = (p: string) => p.split("/")[1] ?? "";
+  const dotEase = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+  // dir=1 盖住，dir=-1 揭开。波前从点击处向外扩，时间由 rAF 时间戳决定，主线程忙时只掉帧不拖长
+  function dots(dir: 1 | -1, dur: number, ox: number, oy: number) {
+    const c = document.getElementById("pt-dots") as HTMLCanvasElement | null;
+    const g = c?.getContext("2d");
+    if (!c || !g) return Promise.resolve();
+    const d = DPR(), W = innerWidth, H = innerHeight;
+    c.width = W * d;
+    c.height = H * d;
+    g.scale(d, d);
+    c.dataset.run = dir === 1 ? "cover" : "reveal";
+    const cell = Math.max(16, Math.round(W / 60));
+    const cols = Math.ceil(W / cell) + 1, rows = Math.ceil(H / cell) + 1;
+    const sx = ox * W, sy = oy * H;
+    const far = Math.hypot(Math.max(sx, W - sx), Math.max(sy, H - sy));
+    const band = 0.45;
+    return new Promise<void>((done) => {
+      const t0 = performance.now();
+      const frame = (now: number) => {
+        const t = Math.min(1, (now - t0) / dur);
+        g.clearRect(0, 0, W, H);
+        g.fillStyle = "#0f1f19";
+        g.beginPath();
+        for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+          const px = i * cell, py = j * cell;
+          let p = (t * (1 + band) - Math.hypot(px - sx, py - sy) / far) / band;
+          p = Math.max(0, Math.min(1, p));
+          if (dir === -1) p = 1 - p;
+          const r = dotEase(p) * cell * 0.74;
+          if (r < 0.3) continue;
+          g.moveTo(px + r, py);
+          g.arc(px, py, r, 0, 6.283);
+        }
+        g.fill();
+        if (t < 1) requestAnimationFrame(frame);
+        else {
+          if (dir === -1) g.clearRect(0, 0, W, H);
+          delete c.dataset.run;
+          done();
+        }
+      };
+      frame(t0);
+    });
+  }
 
   function internal(a: HTMLAnchorElement): URL | null {
     if (!a.getAttribute("href") || a.target === "_blank" || a.hasAttribute("download")) return null;
@@ -61,6 +114,14 @@
       clearTimeout(timer);
       root.classList.remove("pt-in", "pt-doc", "pt-flip");
       docMode = inDocs(location.pathname) && inDocs(dest.pathname);
+      dotMode = section(location.pathname) !== section(dest.pathname);
+      if (dotMode) {
+        ox = e.clientX / innerWidth || 0.5;
+        oy = e.clientY / innerHeight || 0.5;
+        covered = dots(1, COVER, ox, oy);
+        navigate(dest.href);
+        return;
+      }
       if (docMode) root.classList.add("pt-doc");
       const title = docMode ? a.querySelector<HTMLElement>(":scope.pi-a .pi-t") : null;
       if (title && /^\/blog\/(?!tags\/|series\/)./.test(dest.pathname)) {
@@ -77,10 +138,13 @@
     document.addEventListener("astro:before-preparation", (e: any) => {
       // 前进和后退不经过点击，在这里判断
       docMode = inDocs(e.from.pathname) && inDocs(e.to.pathname);
-      if (!delay) return;
+      if (!delay) {
+        dotMode = false; // 前进和后退只淡入
+        return;
+      }
       delay = false;
       const load = e.loader;
-      e.loader = async () => { await Promise.all([load(), wait(OUT)]); };
+      e.loader = async () => { await Promise.all([load(), dotMode ? covered : wait(OUT)]); };
     });
 
     // 侧栏内容相同时做局部替换：不重建 body，只换正文和目录
@@ -106,7 +170,7 @@
 
     document.addEventListener("astro:after-swap", () => {
       syncHeader();
-      if (reduced()) return;
+      if (reduced() || dotMode) return;
       // 换页会清空 html 的 class，这里按记下的模式重新加回
       root.classList.add("pt-in");
       if (docMode) root.classList.add("pt-doc");
@@ -117,6 +181,12 @@
       timer = window.setTimeout(() => root.classList.remove("pt-in", "pt-doc", "pt-flip"), CLEAR);
     });
 
-    document.addEventListener("astro:page-load", () => { busy = false; });
+    document.addEventListener("astro:page-load", () => {
+      busy = false;
+      if (!dotMode) return;
+      dotMode = false;
+      // 等新页面画出第一帧再揭开
+      requestAnimationFrame(() => requestAnimationFrame(() => dots(-1, REVEAL, ox, oy)));
+    });
   }
 </script>

@@ -279,6 +279,7 @@ html.js .al .w { opacity: 0.16; }
 .tb-load { display: grid; place-items: center; height: 100%; margin: 0; border-radius: 14px; background: var(--bg-2); color: var(--dim); font-size: 15px; }
 
 /* ───────────── 换页 ───────────── */
+#pt-dots { position: fixed; inset: 0; z-index: 9000; width: 100%; height: 100%; pointer-events: none; }
 html.pt-out main, html.pt-out footer.site { opacity: 0; transition: opacity 0.2s ease-out; }
 html.pt-in main, html.pt-in footer.site { animation: pt-in 0.5s var(--ease) both; }
 @keyframes pt-in { from { opacity: 0; } }
