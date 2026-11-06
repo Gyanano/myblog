@@ -1,21 +1,11 @@
 // @ts-check
-import { rmSync } from 'node:fs';
 import { defineConfig } from 'astro/config';
 
 import react from '@astrojs/react';
 
-// 后台只在本地开发时使用，不进生产构建。上线在线后台时删掉这个集成。
-/** @type {import('astro').AstroIntegration} */
-const dropAdmin = {
-  name: 'drop-admin',
-  hooks: {
-    'astro:build:done': ({ dir }) => rmSync(new URL('admin/', dir), { recursive: true, force: true }),
-  },
-};
-
 // https://astro.build/config
 export default defineConfig({
-  integrations: [react(), dropAdmin],
+  integrations: [react()],
   // 代码配色交给 CSS 变量，放在 global.css，和全站令牌一起管理
   markdown: { shikiConfig: { theme: 'css-variables' } },
   // 指针停留时预取，点击后几乎不用等网络
