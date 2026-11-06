@@ -1,8 +1,8 @@
-title: "LLM_Assistant"
-desc: "基于立创 ESP32-C3 开发板的语音助手：用百度 API 把语音转成文字，调用讯飞星火大模型作答，按模块拆分，便于扩展。"
+title: LLM_Assistant
+desc: 基于立创 ESP32-C3 开发板的语音助手：用百度 API 把语音转成文字，调用讯飞星火大模型作答，按模块拆分，便于扩展。
 stack:
-  - "C"
-  - "ESP32-C3"
-  - "WebSocket"
-repo: "https://github.com/Gyanano/LLM_Assistant"
+  - C
+  - ESP32
+  - WebSocket
+repo: https://github.com/Gyanano/LLM_Assistant
 order: 3
