@@ -18,7 +18,7 @@ const blog = defineCollection({
 });
 
 // 作品集与 GitHub 项目是两件事：前者是自己挑选、配图展示的作品，后者是代码仓库。
-// 两者都由 /admin 后台写入。可选字段容忍后台写出的空值。
+// 两者都由 /gyanano_cms 后台写入。可选字段容忍后台写出的空值。
 const works = defineCollection({
   loader: glob({ base: "./src/content/works", pattern: "**/*.yml" }),
   schema: z.object({

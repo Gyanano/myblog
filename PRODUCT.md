@@ -24,7 +24,7 @@ web
 - 保留路由：`/`、`/about`、`/work`、`/tools`、`/blog`、`/blog/[slug]`。
 - 身份文案和技能来自 `src/consts.ts`。
 - 作品集和 GitHub 项目是两件事，分别存放在 `src/content/works/` 和 `src/content/projects/`。作品集由博主单独配图，首页只展示作品集。
-- 博主用本地开发服务器的 `/admin/index.html` 后台编辑作品集、GitHub 项目、文章和站点设置。后台不进生产构建。它只改工作区文件，发布仍需提交、构建和部署。
+- 博主在线上 `/gyanano_cms/` 后台用 GitHub 访问令牌登录，编辑作品集、GitHub 项目、文章和站点设置。保存时直接提交到 `main`，Cloudflare 自动重建。本地开发服务器的 `/gyanano_cms/index.html` 只改工作区文件。
 - 栏目名（道、术、演、器、墨痕）是否沿用：待定，视觉可以完全重做。
 
 ## Brand Commitments

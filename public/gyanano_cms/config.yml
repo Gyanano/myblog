@@ -1,7 +1,7 @@
 # 后台配置（Sveltia CMS）。路径都相对 extra-earth/ 仓库根目录。
-# 线上用法：打开 /admin/ → 用访问令牌（Access Token）登录。保存时直接提交到 main，Cloudflare 自动重建。
+# 线上用法：打开 /gyanano_cms/ → 用访问令牌（Access Token）登录。保存时直接提交到 main，Cloudflare 自动重建。
 # 令牌用 GitHub 细粒度令牌：只选本仓库，Contents 读写，设置过期时间。
-# 本地用法：npm run dev → Chrome 或 Edge 打开 /admin/index.html → Work with Local Repository → 选 extra-earth/。本地保存只写工作区，不提交。
+# 本地用法：npm run dev → Chrome 或 Edge 打开 /gyanano_cms/index.html → Work with Local Repository → 选 extra-earth/。本地保存只写工作区，不提交。
 backend:
   name: github
   repo: Gyanano/myblog
