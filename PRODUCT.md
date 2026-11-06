@@ -31,7 +31,7 @@ web
 站名「Gyanano · 竹言」。用户要求：暗色底，克制的光影点缀，大胆的元素拼接，打破常规，有张力，独一无二。参考图 1 是几何色块拼贴，参考图 2 是大图加圆角卡片的杂志版式；用户要的是它们的张力，不是它们的亮色底。
 
 ## Evidence on Hand
-真实内容：20 篇文章，8 个 GitHub 项目，1 个工具。作品集目前是 Bower、RSerialDebugAssistant、Feedback Spider，封面待博主上传。同一个项目不得同时出现在作品集和 GitHub 项目里。没有客户评价和数据，不得编造。
+真实内容：20 篇文章，7 个 GitHub 项目，1 个工具。作品集目前是 Bower、RSerialDebugAssistant、zymor，封面在 `public/works/`，由 Grok 生成。同一个项目不得同时出现在作品集和 GitHub 项目里。没有客户评价和数据，不得编造。
 
 ## Product Principles
 1. 先让人记住这个人，再让人读内容。

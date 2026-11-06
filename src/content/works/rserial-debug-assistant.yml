@@ -5,6 +5,7 @@ tags:
   - "Rust"
   - "React"
   - "TypeScript"
+cover: "/works/rserial-cover.jpg"
 repo: "https://github.com/Gyanano/RSerialDebugAssistant"
 home: true
 order: 2

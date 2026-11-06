@@ -6,6 +6,7 @@ tags:
   - "SQLite"
   - "LLM"
   - "浏览器扩展"
+cover: "/works/bower-cover.jpg"
 repo: "https://github.com/Gyanano/Bower"
 home: true
 order: 1

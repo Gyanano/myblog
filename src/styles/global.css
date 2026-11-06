@@ -444,7 +444,7 @@ html.pt-flip.pt-in #post > :not(h1) { animation: pt-in 0.5s 0.3s var(--ease) bot
 html.sm-open { overflow: hidden; }
 
 /* 返回顶部 */
-.back-to-top { position: fixed; right: clamp(16px, 5.4vw, 96px); bottom: clamp(24px, 18vh, 168px); z-index: 80; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line-2); background: rgba(16, 17, 19, 0.8); color: var(--ink); cursor: pointer; display: grid; place-items: center; opacity: 0; pointer-events: none; transform: translateY(10px); transition: opacity 0.3s, transform 0.3s, border-color 0.2s; }
+.back-to-top { position: fixed; right: clamp(16px, 2vw, 40px); bottom: clamp(24px, 13vh, 120px); z-index: 80; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line-2); background: rgba(16, 17, 19, 0.8); color: var(--ink); cursor: pointer; display: grid; place-items: center; opacity: 0; pointer-events: none; transform: translateY(10px); transition: opacity 0.3s, transform 0.3s, border-color 0.2s; }
 .back-to-top.is-visible { opacity: 1; pointer-events: auto; transform: none; }
 .back-to-top:hover { border-color: rgba(255, 255, 255, 0.3); }
 .back-to-top svg { width: 17px; height: 17px; }
