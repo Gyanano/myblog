@@ -8,7 +8,7 @@
   import { navigate, swapFunctions } from "astro:transitions/client";
   import { DPR } from "../lib/dpr";
 
-  const OUT = 200, CLEAR = 760, COVER = 210, REVEAL = 270;
+  const OUT = 200, CLEAR = 760, COVER = 500, REVEAL = 620;
   const root = document.documentElement;
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
   const inDocs = (p: string) => p === "/blog" || p.startsWith("/blog/");
@@ -35,7 +35,7 @@
     const cols = Math.ceil(W / cell) + 1, rows = Math.ceil(H / cell) + 1;
     const sx = ox * W, sy = oy * H;
     const far = Math.hypot(Math.max(sx, W - sx), Math.max(sy, H - sy));
-    const band = 0.45;
+    const band = 0.6; // 波前更宽，慢速时能看清网点长大
     return new Promise<void>((done) => {
       const t0 = performance.now();
       const frame = (now: number) => {
